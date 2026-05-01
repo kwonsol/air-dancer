@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DANCE — AIR DANCER</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .dance-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    /* ── LEFT: webcam ── */
+    .cam-panel {
+      border-right: var(--border);
+      display: flex;
+      flex-direction: column;
+      background: #0a0a0a;
+      position: relative;
+    }
+
+    .cam-header {
+      background: #000;
+      border-bottom: var(--border);
+      padding: 7px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cam-header span {
+      color: var(--green);
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .cam-status {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+    }
+
+    .cam-status.on  { color: var(--green); }
+    .cam-status.off { color: #555; }
+
+    .cam-feed-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #camCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cam-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .cam-placeholder .big-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      display: block;
+      color: #222;
+      border: 2px solid #222;
+      width: 80px;
+      height: 80px;
+      line-height: 76px;
+      text-align: center;
+    }
+
+    .cam-footer {
+      border-top: var(--border);
+      background: #000;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cam-footer span {
+      color: #555;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      flex: 1;
+    }
+
+    /* Sensitivity */
+    .sens-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--green);
+    }
+
+    .sens-row label {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: #777;
+    }
+
+    .sens-row input[type=range] {
+      width: 80px;
+      background: #333;
+    }
+
+    /* ── RIGHT: dancer stage ── */
+    .stage-panel {
+      display: flex;
+      flex-direction: column;
+      background: #f8f8f8;
+      position: relative;
+    }
+
+    .stage-header {
+      background: var(--white);
+      border-bottom: var(--border);
+      padding: 7px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stage-header span {
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .stage-canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #stageCanvas { display: block; }
+
+    /* Motion zone bars */
+    .motion-hud {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      align-items: flex-end;
+    }
+
+    .mhud-bar {
+      width: 28px;
+      border: 2px solid #000;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+      height: 50px;
+    }
+
+    .mhud-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--green);
+      transition: height 0.08s;
+    }
+
+    .mhud-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.06em;
+      text-align: center;
+      margin-top: 3px;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+
+    /* instruction overlay */
+    .instruction-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.5s;
+    }
+
+    .instruction-overlay.hidden { opacity: 0; }
+
+    .instruction-box {
+      border: var(--border);
+      background: var(--white);
+      padding: 20px 28px;
+      text-align: center;
+      max-width: 260px;
+    }
+
+    .instruction-box h3 {
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .instruction-box p {
+      font-size: 0.72rem;
+      line-height: 1.6;
+      opacity: 0.7;
+    }
+
+    .stage-footer {
+      border-top: var(--border);
+      padding: 10px 16px;
+      background: var(--white);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .dancer-label {
+      flex: 1;
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+
+    @media (max-width: 700px) {
+      body { height: auto; overflow: auto; }
+      main { overflow: visible; }
+      .dance-layout { grid-template-columns: 1fr; }
+      .cam-panel { min-height: 45vw; border-right: none; border-bottom: var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">AIR DANCER</a>
+  <nav class="site-nav">
+    <a href="create.html">CREATE</a>
+    <a href="dance.html" class="active">DANCE</a>
+    <a href="gallery.html">GALLERY</a>
+  </nav>
+</header>
+
+<main>
+  <div class="dance-layout">
+
+    <!-- ── WEBCAM PANEL ── -->
+    <div class="cam-panel">
+      <div class="cam-header">
+        <span>WEBCAM INPUT</span>
+        <span class="cam-status off" id="camStatus">● OFF</span>
+      </div>
+
+      <div class="cam-feed-wrap">
+        <video id="camVideo" autoplay muted playsinline style="display:none;"></video>
+        <canvas id="camCanvas"></canvas>
+
+        <div class="cam-placeholder" id="camPlaceholder">
+          <span class="big-icon">◉</span>
+          <p>웹캠을 시작하면<br>손동작으로 인형을<br>춤추게 할 수 있어요</p>
+          <br>
+          <p style="color:#444; font-size:0.62rem;">손을 화면 앞에서 움직이면<br>왼팔/오른팔이 따라 움직입니다</p>
+        </div>
+      </div>
+
+      <div class="cam-footer">
+        <button class="btn btn-green" id="btnCam" style="padding:6px 14px; font-size:0.72rem;">START CAM</button>
+        <div class="sens-row">
+          <label for="sensSlider">SENS</label>
+          <input type="range" id="sensSlider" min="0.5" max="3" step="0.1" value="1">
+          <span id="sensVal" style="color:#777; font-size:0.62rem; width:24px;">1.0</span>
+        </div>
+        <span>LEFT — RIGHT 구역을 손으로 움직이세요</span>
+      </div>
+    </div>
+
+    <!-- ── STAGE PANEL ── -->
+    <div class="stage-panel">
+      <div class="stage-header">
+        <span>MY DANCER</span>
+        <span id="stageDancerName" style="opacity:0.45;">DANCER</span>
+      </div>
+
+      <div class="stage-canvas-wrap">
+        <canvas id="stageCanvas" width="280" height="420"></canvas>
+
+        <!-- Instruction overlay (shown before cam starts) -->
+        <div class="instruction-overlay" id="instructionOverlay">
+          <div class="instruction-box">
+            <h3>HOW TO DANCE</h3>
+            <p>
+              왼쪽 ← 손을 움직이면 → 왼팔<br>
+              오른쪽 ← 손을 움직이면 → 오른팔<br><br>
+              좌우로 크게 흔들면 몸통도 기울어요<br><br>
+              <strong>START CAM</strong>을 눌러 시작하세요
+            </p>
+          </div>
+        </div>
+
+        <!-- Motion HUD -->
+        <div class="motion-hud">
+          <div>
+            <div class="mhud-bar"><div class="mhud-fill" id="hudLeft" style="height:0%"></div></div>
+            <div class="mhud-label">L</div>
+          </div>
+          <div>
+            <div class="mhud-bar"><div class="mhud-fill" id="hudIntensity" style="height:20%"></div></div>
+            <div class="mhud-label">INT</div>
+          </div>
+          <div>
+            <div class="mhud-bar"><div class="mhud-fill" id="hudRight" style="height:0%"></div></div>
+            <div class="mhud-label">R</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-footer">
+        <span class="dancer-label" id="footerName">DANCER</span>
+        <a href="create.html" class="btn">← EDIT</a>
+        <button class="btn btn-green" id="btnSave">SAVE TO GALLERY →</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="js/dancer.js"></script>
+<script src="js/motion.js"></script>
+<script src="js/storage.js"></script>
+<script>
+// ── LOAD DANCER CONFIG ────────────────────────────────────────────────────────
+const cfg    = DancerStorage.getCurrent() || {};
+const dancer = new AirDancer(cfg);
+
+const nameLabel = cfg.name || 'DANCER';
+document.getElementById('stageDancerName').textContent = nameLabel;
+document.getElementById('footerName').textContent      = nameLabel;
+
+// ── STAGE CANVAS LOOP ─────────────────────────────────────────────────────────
+const stageCanvas = document.getElementById('stageCanvas');
+const stageCtx    = stageCanvas.getContext('2d');
+let   lastT       = performance.now();
+let   motionData  = null;
+
+function stageLoop(now) {
+  const dt = Math.min((now - lastT) / 1000, 0.05);
+  lastT = now;
+
+  if (motionData) {
+    dancer.setMotion(motionData);
+  }
+  dancer.update(dt);
+
+  stageCtx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
+
+  // Ground line
+  stageCtx.strokeStyle = '#ccc';
+  stageCtx.lineWidth   = 1;
+  stageCtx.beginPath();
+  stageCtx.moveTo(0, stageCanvas.height - 22);
+  stageCtx.lineTo(stageCanvas.width, stageCanvas.height - 22);
+  stageCtx.stroke();
+
+  dancer.draw(stageCtx, stageCanvas.width / 2, stageCanvas.height - 22, 1.1);
+
+  requestAnimationFrame(stageLoop);
+}
+requestAnimationFrame(stageLoop);
+
+// ── WEBCAM + MOTION DETECTOR ──────────────────────────────────────────────────
+const video    = document.getElementById('camVideo');
+const camCanvas = document.getElementById('camCanvas');
+const detector = new MotionDetector(video, camCanvas);
+
+let camOn = false;
+
+async function toggleCam() {
+  if (!camOn) {
+    const ok = await detector.start();
+    if (!ok) {
+      alert('웹캠 접근에 실패했습니다.\n브라우저 설정에서 카메라 권한을 허용해 주세요.');
+      return;
+    }
+    camOn = true;
+    document.getElementById('btnCam').textContent = 'STOP CAM';
+    document.getElementById('camStatus').textContent = '● ON';
+    document.getElementById('camStatus').className = 'cam-status on';
+    document.getElementById('camPlaceholder').style.display = 'none';
+    document.getElementById('instructionOverlay').classList.add('hidden');
+
+    // Resize cam canvas to match its container
+    const wrap = camCanvas.parentElement;
+    camCanvas.width  = wrap.clientWidth;
+    camCanvas.height = wrap.clientHeight;
+
+    hudLoop();
+  } else {
+    detector.stop();
+    camOn = false;
+    document.getElementById('btnCam').textContent = 'START CAM';
+    document.getElementById('camStatus').textContent = '● OFF';
+    document.getElementById('camStatus').className = 'cam-status off';
+    document.getElementById('camPlaceholder').style.display = 'flex';
+    motionData = null;
+  }
+}
+
+document.getElementById('btnCam').addEventListener('click', toggleCam);
+
+// ── SENSITIVITY ───────────────────────────────────────────────────────────────
+const sensSlider = document.getElementById('sensSlider');
+const sensVal    = document.getElementById('sensVal');
+sensSlider.addEventListener('input', () => {
+  const v = parseFloat(sensSlider.value);
+  sensVal.textContent = v.toFixed(1);
+  detector.sensitivity = v;
+});
+
+// ── HUD UPDATE LOOP ───────────────────────────────────────────────────────────
+function hudLoop() {
+  if (!camOn) return;
+  motionData = detector.getMotionData();
+
+  document.getElementById('hudLeft').style.height      = (motionData.left * 100).toFixed(0) + '%';
+  document.getElementById('hudRight').style.height     = (motionData.right * 100).toFixed(0) + '%';
+  document.getElementById('hudIntensity').style.height = ((motionData.intensity - 0.4) / 1.8 * 100).toFixed(0) + '%';
+
+  setTimeout(hudLoop, 50);
+}
+
+// ── SAVE BUTTON ───────────────────────────────────────────────────────────────
+document.getElementById('btnSave').addEventListener('click', () => {
+  const saved = DancerStorage.addDancer({ ...dancer.config });
+  DancerStorage.clearCurrent();
+  if (confirm(`"${saved.name}" 이(가) 갤러리에 저장되었습니다!\n갤러리로 이동할까요?`)) {
+    window.location.href = 'gallery.html';
+  }
+});
+</script>
+</body>
+</html>

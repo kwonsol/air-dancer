@@ -1,0 +1,388 @@
+:root {
+  --green: #39FF14;
+  --black: #000;
+  --white: #fff;
+  --border: 3px solid #000;
+  --font: 'Courier New', Courier, monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: var(--font);
+  background: var(--white);
+  color: var(--black);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+.site-header {
+  background: var(--green);
+  border-bottom: var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-logo {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--black);
+}
+
+.site-nav {
+  display: flex;
+  gap: 0;
+}
+
+.site-nav a {
+  display: inline-block;
+  padding: 5px 14px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  text-decoration: none;
+  color: var(--black);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-left: 6px;
+  transition: background 0.08s, color 0.08s;
+}
+
+.site-nav a:hover,
+.site-nav a.active {
+  background: var(--black);
+  color: var(--green);
+}
+
+/* ── PANEL ── */
+.panel {
+  border: var(--border);
+}
+
+.panel + .panel {
+  border-top: none;
+}
+
+.panel-header {
+  background: var(--green);
+  border-bottom: var(--border);
+  padding: 7px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+}
+
+.panel-header .plus {
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+
+.panel-header.open .plus {
+  transform: rotate(45deg);
+}
+
+.panel-body {
+  padding: 12px 14px;
+  display: none;
+}
+
+.panel-body.open {
+  display: block;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-block;
+  border: var(--border);
+  padding: 9px 20px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: bold;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: var(--white);
+  text-decoration: none;
+  color: var(--black);
+  transition: background 0.08s, color 0.08s;
+  border-radius: 0;
+}
+
+.btn:hover {
+  background: var(--black);
+  color: var(--green);
+}
+
+.btn-green {
+  background: var(--green);
+}
+
+.btn-green:hover {
+  background: var(--black);
+  color: var(--green);
+}
+
+.btn-black {
+  background: var(--black);
+  color: var(--green);
+}
+
+.btn-black:hover {
+  background: var(--green);
+  color: var(--black);
+}
+
+/* ── TAGS ── */
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.tag {
+  display: inline-block;
+  border: 2px solid var(--black);
+  padding: 4px 10px;
+  font-family: var(--font);
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: var(--white);
+  transition: background 0.08s, color 0.08s;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.tag:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.tag.selected {
+  background: var(--black);
+  color: var(--green);
+}
+
+/* color swatch tag */
+.tag-color {
+  width: 36px;
+  height: 28px;
+  padding: 0;
+  position: relative;
+}
+
+.tag-color.selected::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: rgba(0,0,0,0.7);
+}
+
+/* ── INPUT ── */
+.input-field {
+  border: var(--border);
+  padding: 7px 12px;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  width: 100%;
+  background: var(--white);
+  outline: none;
+  border-radius: 0;
+}
+
+.input-field:focus {
+  background: #f5f5f5;
+}
+
+/* ── LABEL ── */
+.label {
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  display: block;
+  margin-bottom: 6px;
+  margin-top: 10px;
+}
+
+.label:first-child {
+  margin-top: 0;
+}
+
+/* ── PAGE LAYOUT HELPERS ── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: calc(100vh - 53px);
+}
+
+.split-left {
+  border-right: var(--border);
+  overflow-y: auto;
+  max-height: calc(100vh - 53px);
+}
+
+.split-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f8f8;
+  position: relative;
+}
+
+/* ── RANGE SLIDER ── */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--black);
+  outline: none;
+  margin: 8px 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--green);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  border-top: var(--border);
+  padding: 12px 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--white);
+}
+
+/* ── MOTION ZONE VIZ ── */
+.zone-indicator {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  height: 60px;
+}
+
+.zone-bar {
+  flex: 1;
+  border: 2px solid var(--black);
+  background: var(--white);
+  position: relative;
+  overflow: hidden;
+}
+
+.zone-bar-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--green);
+  transition: height 0.05s;
+}
+
+.zone-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+  margin-top: 3px;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+/* ── GALLERY PLAZA ── */
+.plaza-wrap {
+  border: var(--border);
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  background: #fff;
+}
+
+.plaza-wrap:active {
+  cursor: grabbing;
+}
+
+.plaza-scrollbar {
+  border-top: 2px solid var(--black);
+  height: 18px;
+  background: #f0f0f0;
+  position: relative;
+}
+
+.plaza-scrollbar-thumb {
+  position: absolute;
+  top: 2px;
+  height: 14px;
+  background: var(--green);
+  border: 1.5px solid var(--black);
+  cursor: pointer;
+}
+
+/* ── DANCER CARD (gallery info) ── */
+.dancer-card {
+  border: var(--border);
+  padding: 12px 16px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.dancer-card-title {
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+  .split-left {
+    border-right: none;
+    border-bottom: var(--border);
+    max-height: 50vh;
+  }
+}

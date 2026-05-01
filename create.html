@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CREATE — AIR DANCER</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    main { flex: 1; overflow: hidden; }
+
+    /* Left panel scroll */
+    .split-left { overflow-y: auto; }
+
+    /* Preview area */
+    .preview-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f4f4f4;
+      border-bottom: var(--border);
+      position: relative;
+      padding: 20px;
+    }
+
+    #previewCanvas {
+      display: block;
+      background: transparent;
+    }
+
+    .preview-label {
+      position: absolute;
+      top: 12px;
+      left: 16px;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.45;
+    }
+
+    .preview-name {
+      position: absolute;
+      bottom: 14px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: bold;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+
+    /* Color swatches */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .color-swatch {
+      aspect-ratio: 1;
+      border: 2.5px solid var(--black);
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.08s;
+    }
+
+    .color-swatch:hover { transform: scale(1.08); }
+
+    .color-swatch.selected::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 2.5px solid rgba(0,0,0,0.6);
+    }
+
+    .color-swatch-name {
+      font-size: 0.52rem;
+      letter-spacing: 0.06em;
+      text-align: center;
+      margin-top: 3px;
+      text-transform: uppercase;
+    }
+
+    /* Section dividers in panel */
+    .opt-section { margin-bottom: 4px; }
+    .opt-section:last-child { margin-bottom: 0; }
+
+    /* Accordion panel: open by default for first, closed others */
+    .panel-body { padding: 14px 16px; display: none; }
+    .panel-body.open { display: block; }
+
+    /* Info bar */
+    .info-bar {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      opacity: 0.5;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    @media (max-width: 700px) {
+      body { height: auto; overflow: auto; }
+      main { overflow: visible; }
+      .split { grid-template-columns: 1fr; min-height: auto; }
+      .split-left { max-height: 55vh; }
+      .preview-area { min-height: 340px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">AIR DANCER</a>
+  <nav class="site-nav">
+    <a href="create.html" class="active">CREATE</a>
+    <a href="dance.html">DANCE</a>
+    <a href="gallery.html">GALLERY</a>
+  </nav>
+</header>
+
+<main>
+  <div class="split">
+
+    <!-- ── LEFT: CUSTOMIZATION PANELS ── -->
+    <div class="split-left">
+      <div class="info-bar">프리셋을 조합해 나만의 인형을 만드세요</div>
+
+      <!-- COLOR -->
+      <div class="panel opt-section">
+        <div class="panel-header open" data-panel="color">
+          <span>COLOR 색깔</span><span class="plus">+</span>
+        </div>
+        <div class="panel-body open" id="panel-color">
+          <div class="color-grid" id="colorGrid"></div>
+        </div>
+      </div>
+
+      <!-- HEAD -->
+      <div class="panel opt-section">
+        <div class="panel-header open" data-panel="head">
+          <span>HEAD 머리</span><span class="plus">+</span>
+        </div>
+        <div class="panel-body open" id="panel-head">
+          <div class="tag-group" id="headGroup"></div>
+        </div>
+      </div>
+
+      <!-- FACE -->
+      <div class="panel opt-section">
+        <div class="panel-header open" data-panel="face">
+          <span>FACE 얼굴</span><span class="plus">+</span>
+        </div>
+        <div class="panel-body open" id="panel-face">
+          <div class="tag-group" id="faceGroup"></div>
+        </div>
+      </div>
+
+      <!-- DECORATION -->
+      <div class="panel opt-section">
+        <div class="panel-header open" data-panel="deco">
+          <span>DECORATION 장식</span><span class="plus">+</span>
+        </div>
+        <div class="panel-body open" id="panel-deco">
+          <div class="tag-group" id="decoGroup"></div>
+        </div>
+      </div>
+
+      <!-- HAT -->
+      <div class="panel opt-section">
+        <div class="panel-header open" data-panel="hat">
+          <span>HAT 모자</span><span class="plus">+</span>
+        </div>
+        <div class="panel-body open" id="panel-hat">
+          <div class="tag-group" id="hatGroup"></div>
+        </div>
+      </div>
+
+      <!-- TEXT -->
+      <div class="panel opt-section">
+        <div class="panel-header open" data-panel="text">
+          <span>BODY TEXT 글자</span><span class="plus">+</span>
+        </div>
+        <div class="panel-body open" id="panel-text">
+          <span class="label">몸통에 들어갈 텍스트 (최대 10자)</span>
+          <input class="input-field" id="bodyTextInput" type="text" maxlength="10"
+                 placeholder="DANCE / YEAH / ..." />
+        </div>
+      </div>
+
+      <!-- NAME -->
+      <div class="panel opt-section">
+        <div class="panel-header open" data-panel="name">
+          <span>NAME 이름</span><span class="plus">+</span>
+        </div>
+        <div class="panel-body open" id="panel-name">
+          <span class="label">내 광고풍선인형의 이름</span>
+          <input class="input-field" id="dancerNameInput" type="text" maxlength="20"
+                 placeholder="DANCER #001" />
+        </div>
+      </div>
+
+    </div><!-- /split-left -->
+
+    <!-- ── RIGHT: PREVIEW ── -->
+    <div class="split-right" style="flex-direction:column;">
+      <div class="preview-area" style="flex:1; width:100%; position:relative;">
+        <span class="preview-label">LIVE PREVIEW</span>
+        <canvas id="previewCanvas" width="220" height="360"></canvas>
+        <span class="preview-name" id="previewName">DANCER #001</span>
+      </div>
+
+      <!-- Bottom action bar -->
+      <div class="bottom-bar">
+        <button class="btn btn-green" id="btnSaveGallery">SAVE TO GALLERY →</button>
+        <a href="dance.html" class="btn" id="btnDance">GO DANCE ↗</a>
+        <button class="btn" id="btnRandom" title="랜덤 조합">RANDOM</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="js/dancer.js"></script>
+<script src="js/storage.js"></script>
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+
+const config = {
+  colorIndex:  0,
+  headStyle:   0,
+  faceStyle:   0,
+  decoration:  0,
+  hatStyle:    0,
+  bodyText:    '',
+  name:        '',
+  ...( DancerStorage.getCurrent() || {} )
+};
+
+const dancer = new AirDancer(config);
+
+// ── CANVAS LOOP ───────────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('previewCanvas');
+const ctx    = canvas.getContext('2d');
+let   last   = performance.now();
+
+function loop(now) {
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  dancer.update(dt);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  dancer.draw(ctx, canvas.width / 2, canvas.height - 10, 1);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ── BUILD UI ──────────────────────────────────────────────────────────────────
+
+// Colors
+const colorGrid = document.getElementById('colorGrid');
+DANCER_COLORS.forEach((c, i) => {
+  const wrap = document.createElement('div');
+  const swatch = document.createElement('div');
+  swatch.className  = 'color-swatch' + (i === config.colorIndex ? ' selected' : '');
+  swatch.style.background = c.body;
+  swatch.style.outline    = c.body === '#FFFFFF' ? '2.5px solid #ccc' : '';
+  swatch.title = c.name;
+  swatch.addEventListener('click', () => {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    swatch.classList.add('selected');
+    config.colorIndex = i;
+    dancer.config.colorIndex = i;
+    sync();
+  });
+  const label = document.createElement('div');
+  label.className = 'color-swatch-name';
+  label.textContent = c.name.split(' ')[0];
+  wrap.appendChild(swatch);
+  wrap.appendChild(label);
+  colorGrid.appendChild(wrap);
+});
+
+// Generic tag group builder
+function buildTagGroup(containerId, items, configKey) {
+  const group = document.getElementById(containerId);
+  items.forEach((name, i) => {
+    const tag = document.createElement('span');
+    tag.className   = 'tag' + (i === config[configKey] ? ' selected' : '');
+    tag.textContent = name;
+    tag.addEventListener('click', () => {
+      group.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+      tag.classList.add('selected');
+      config[configKey] = i;
+      dancer.config[configKey] = i;
+      sync();
+    });
+    group.appendChild(tag);
+  });
+}
+
+buildTagGroup('headGroup', HEAD_STYLES, 'headStyle');
+buildTagGroup('faceGroup', FACE_STYLES, 'faceStyle');
+buildTagGroup('decoGroup', DECO_STYLES, 'decoration');
+buildTagGroup('hatGroup',  HAT_STYLES,  'hatStyle');
+
+// Text inputs
+document.getElementById('bodyTextInput').value = config.bodyText || '';
+document.getElementById('bodyTextInput').addEventListener('input', e => {
+  config.bodyText = e.target.value;
+  dancer.config.bodyText = e.target.value;
+  sync();
+});
+
+document.getElementById('dancerNameInput').value = config.name || '';
+document.getElementById('dancerNameInput').addEventListener('input', e => {
+  config.name = e.target.value;
+  document.getElementById('previewName').textContent = e.target.value || 'DANCER';
+  sync();
+});
+
+// Accordion
+document.querySelectorAll('.panel-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const id   = header.dataset.panel;
+    const body = document.getElementById('panel-' + id);
+    const open = body.classList.toggle('open');
+    header.classList.toggle('open', open);
+    header.querySelector('.plus').style.transform = open ? 'rotate(45deg)' : '';
+  });
+  header.classList.add('open');
+  header.querySelector('.plus').style.transform = 'rotate(45deg)';
+});
+
+// ── SYNC / PERSIST ────────────────────────────────────────────────────────────
+
+function sync() {
+  DancerStorage.setCurrent({ ...config });
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+
+document.getElementById('btnSaveGallery').addEventListener('click', () => {
+  const saved = DancerStorage.addDancer({ ...config });
+  DancerStorage.clearCurrent();
+  alert(`"${saved.name}" 이(가) 갤러리에 저장되었습니다!`);
+  window.location.href = 'gallery.html';
+});
+
+document.getElementById('btnDance').addEventListener('click', () => {
+  DancerStorage.setCurrent({ ...config });
+  window.location.href = 'dance.html';
+});
+
+document.getElementById('btnRandom').addEventListener('click', () => {
+  config.colorIndex = Math.floor(Math.random() * DANCER_COLORS.length);
+  config.headStyle  = Math.floor(Math.random() * HEAD_STYLES.length);
+  config.faceStyle  = Math.floor(Math.random() * FACE_STYLES.length);
+  config.decoration = Math.floor(Math.random() * DECO_STYLES.length);
+  config.hatStyle   = Math.floor(Math.random() * HAT_STYLES.length);
+
+  Object.assign(dancer.config, config);
+  rebuildUI();
+  sync();
+});
+
+function rebuildUI() {
+  // Colors
+  document.querySelectorAll('.color-swatch').forEach((s, i) => {
+    s.classList.toggle('selected', i === config.colorIndex);
+  });
+  // Tag groups
+  [
+    ['headGroup', 'headStyle'],
+    ['faceGroup', 'faceStyle'],
+    ['decoGroup', 'decoration'],
+    ['hatGroup',  'hatStyle'],
+  ].forEach(([id, key]) => {
+    document.getElementById(id).querySelectorAll('.tag').forEach((t, i) => {
+      t.classList.toggle('selected', i === config[key]);
+    });
+  });
+}
+
+// Restore name display
+const savedName = config.name || '';
+document.getElementById('previewName').textContent = savedName || 'DANCER';
+</script>
+</body>
+</html>

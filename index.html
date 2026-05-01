@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIR DANCER — 광고풍선인형 전시</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+    .hero {
+      flex: 1;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      overflow: hidden;
+    }
+
+    .hero-main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      padding: 30px 40px;
+      overflow: hidden;
+    }
+
+    .hero-text { flex: 1; max-width: 520px; }
+
+    .hero-eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      border: 2px solid var(--black);
+      display: inline-block;
+      padding: 3px 12px;
+      margin-bottom: 18px;
+    }
+
+    .hero-title {
+      font-size: clamp(3.2rem, 8vw, 7rem);
+      font-weight: 900;
+      line-height: 0.92;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero-title .green-line {
+      display: block;
+      color: var(--black);
+      -webkit-text-stroke: 0px;
+      background: var(--green);
+      padding: 0 6px;
+    }
+
+    .hero-desc {
+      font-size: 0.78rem;
+      line-height: 1.7;
+      letter-spacing: 0.04em;
+      max-width: 380px;
+      opacity: 0.7;
+      margin-bottom: 28px;
+    }
+
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .hero-canvas-wrap {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      max-height: 380px;
+    }
+
+    .hero-canvas-wrap canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    /* bottom card row */
+    .card-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: var(--border);
+    }
+
+    .card-link {
+      padding: 20px 22px;
+      border-right: var(--border);
+      text-decoration: none;
+      color: var(--black);
+      display: flex;
+      flex-direction: column;
+      transition: background 0.08s;
+    }
+
+    .card-link:last-child { border-right: none; }
+    .card-link:hover { background: var(--green); }
+
+    .card-num {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      opacity: 0.45;
+      margin-bottom: 8px;
+    }
+
+    .card-name {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex: 1;
+      margin-bottom: 6px;
+    }
+
+    .card-sub {
+      font-size: 0.7rem;
+      line-height: 1.55;
+      opacity: 0.65;
+      margin-bottom: 12px;
+    }
+
+    .card-arrow { font-size: 1.3rem; font-weight: 900; align-self: flex-end; }
+
+    @media (max-width: 700px) {
+      body { overflow: auto; height: auto; }
+      .hero-main { flex-direction: column; gap: 20px; }
+      .hero-canvas-wrap { max-height: 250px; }
+      .card-row { grid-template-columns: 1fr; }
+      .card-link { border-right: none; border-bottom: var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">AIR DANCER</a>
+  <nav class="site-nav">
+    <a href="create.html">CREATE</a>
+    <a href="dance.html">DANCE</a>
+    <a href="gallery.html">GALLERY</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-main">
+    <div class="hero-text">
+      <span class="hero-eyebrow">광고풍선인형 온라인 전시 프로젝트</span>
+      <h1 class="hero-title">
+        <span>AIR</span>
+        <span class="green-line">DANCER</span>
+        <span>PROJECT</span>
+      </h1>
+      <p class="hero-desc">
+        나만의 광고풍선인형을 만들고, 웹캠으로 춤추게 하고,<br>
+        온라인 광장에 전시하세요. 다른 사람의 인형도 구경하세요.
+      </p>
+      <div class="hero-actions">
+        <a href="create.html" class="btn btn-green">CREATE MY DANCER →</a>
+        <a href="gallery.html" class="btn">VIEW GALLERY</a>
+      </div>
+    </div>
+
+    <div class="hero-canvas-wrap">
+      <canvas id="heroCanvas" width="200" height="340"></canvas>
+    </div>
+  </div>
+
+  <div class="card-row">
+    <a href="create.html" class="card-link">
+      <div class="card-num">01 ——</div>
+      <div class="card-name">CREATE</div>
+      <div class="card-sub">색깔, 머리, 얼굴, 장식, 글자를 조합해 나만의 광고풍선인형을 만든다</div>
+      <div class="card-arrow">→</div>
+    </a>
+    <a href="dance.html" class="card-link">
+      <div class="card-num">02 ——</div>
+      <div class="card-name">DANCE</div>
+      <div class="card-sub">웹캠으로 손동작을 인식시켜 내 인형을 실시간으로 춤추게 만든다</div>
+      <div class="card-arrow">→</div>
+    </a>
+    <a href="gallery.html" class="card-link">
+      <div class="card-num">03 ——</div>
+      <div class="card-name">GALLERY</div>
+      <div class="card-sub">온라인 광장에 내 인형을 전시하고 다른 사람의 인형을 구경한다</div>
+      <div class="card-arrow">→</div>
+    </a>
+  </div>
+</div>
+
+<script src="js/dancer.js"></script>
+<script>
+  const canvas  = document.getElementById('heroCanvas');
+  const ctx     = canvas.getContext('2d');
+  const dancer  = new AirDancer({ colorIndex: 0, headStyle: 0, faceStyle: 0, decoration: 1, hatStyle: 2, bodyText: 'DANCE' });
+
+  // Cycle through dancers to show variety
+  const presets = [
+    { colorIndex: 0, headStyle: 0, faceStyle: 0, decoration: 1, hatStyle: 2, bodyText: 'DANCE' },
+    { colorIndex: 1, headStyle: 1, faceStyle: 2, decoration: 3, hatStyle: 0, bodyText: 'YEAH' },
+    { colorIndex: 2, headStyle: 2, faceStyle: 1, decoration: 2, hatStyle: 3, bodyText: 'FLEX' },
+    { colorIndex: 5, headStyle: 3, faceStyle: 4, decoration: 4, hatStyle: 1, bodyText: 'WOW' },
+  ];
+  let presetIdx = 0;
+  setInterval(() => {
+    presetIdx = (presetIdx + 1) % presets.length;
+    Object.assign(dancer.config, presets[presetIdx]);
+  }, 2800);
+
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    dancer.update(dt);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    dancer.draw(ctx, canvas.width / 2, canvas.height - 10, 1);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>
