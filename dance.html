@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DANCE — AIR DANCER</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
   <style>
     body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -300,6 +301,7 @@
 
       <div class="cam-footer">
         <button class="btn btn-green" id="btnCam" style="padding:6px 14px; font-size:0.72rem;">START CAM</button>
+        <button class="btn" id="btnRec" style="padding:6px 14px; font-size:0.72rem; display:none; background:#ff4444; color:#fff; border:none;">🔴 REC (5초)</button>
         <div class="sens-row">
           <label for="sensSlider">SENS</label>
           <input type="range" id="sensSlider" min="0.5" max="3" step="0.1" value="1">
@@ -317,7 +319,7 @@
       </div>
 
       <div class="stage-canvas-wrap">
-        <canvas id="stageCanvas" width="280" height="420"></canvas>
+        <div id="stageCanvas" style="width:100%; height:100%;"></div>
 
         <!-- Instruction overlay (shown before cam starts) -->
         <div class="instruction-overlay" id="instructionOverlay">
@@ -371,36 +373,20 @@ const nameLabel = cfg.name || 'DANCER';
 document.getElementById('stageDancerName').textContent = nameLabel;
 document.getElementById('footerName').textContent      = nameLabel;
 
-// ── STAGE CANVAS LOOP ─────────────────────────────────────────────────────────
-const stageCanvas = document.getElementById('stageCanvas');
-const stageCtx    = stageCanvas.getContext('2d');
-let   lastT       = performance.now();
-let   motionData  = null;
+// ── STAGE 3D SCENE ───────────────────────────────────────────────────────────
+const stageContainer = document.getElementById('stageCanvas');
+const dancerScene = new DancerScene(stageContainer);
+dancerScene.setDancer(dancer);
+dancerScene.start();
 
-function stageLoop(now) {
-  const dt = Math.min((now - lastT) / 1000, 0.05);
-  lastT = now;
+let motionData = null;
+let isRecording = false;
+let recordFrames = [];
 
-  if (motionData) {
-    dancer.setMotion(motionData);
-  }
-  dancer.update(dt);
-
-  stageCtx.clearRect(0, 0, stageCanvas.width, stageCanvas.height);
-
-  // Ground line
-  stageCtx.strokeStyle = '#ccc';
-  stageCtx.lineWidth   = 1;
-  stageCtx.beginPath();
-  stageCtx.moveTo(0, stageCanvas.height - 22);
-  stageCtx.lineTo(stageCanvas.width, stageCanvas.height - 22);
-  stageCtx.stroke();
-
-  dancer.draw(stageCtx, stageCanvas.width / 2, stageCanvas.height - 22, 1.1);
-
-  requestAnimationFrame(stageLoop);
-}
-requestAnimationFrame(stageLoop);
+// Motion data is applied via setInterval so it feeds into the 3D animation loop
+setInterval(() => {
+  if (motionData) dancer.setMotion(motionData);
+}, 30);
 
 // ── WEBCAM + MOTION DETECTOR ──────────────────────────────────────────────────
 const video    = document.getElementById('camVideo');
@@ -422,6 +408,7 @@ async function toggleCam() {
     document.getElementById('camStatus').className = 'cam-status on';
     document.getElementById('camPlaceholder').style.display = 'none';
     document.getElementById('instructionOverlay').classList.add('hidden');
+    document.getElementById('btnRec').style.display = 'inline-block';
 
     // Resize cam canvas to match its container
     const wrap = camCanvas.parentElement;
@@ -436,6 +423,8 @@ async function toggleCam() {
     document.getElementById('camStatus').textContent = '● OFF';
     document.getElementById('camStatus').className = 'cam-status off';
     document.getElementById('camPlaceholder').style.display = 'flex';
+    document.getElementById('btnRec').style.display = 'none';
+    isRecording = false;
     motionData = null;
   }
 }
@@ -460,8 +449,37 @@ function hudLoop() {
   document.getElementById('hudRight').style.height     = (motionData.right * 100).toFixed(0) + '%';
   document.getElementById('hudIntensity').style.height = ((motionData.intensity - 0.4) / 1.8 * 100).toFixed(0) + '%';
 
+  // 녹화 중일 때 50ms마다 프레임 저장 (100프레임 = 5초)
+  if (isRecording) {
+    recordFrames.push({
+      left: motionData.left,
+      right: motionData.right,
+      tilt: motionData.tilt,
+      intensity: motionData.intensity
+    });
+
+    if (recordFrames.length >= 100) {
+      isRecording = false;
+      document.getElementById('btnRec').textContent = '🔴 REC (5초)';
+      document.getElementById('btnRec').style.background = '#ff4444';
+      
+      // 녹화된 배열을 현재 댄서 설정에 저장
+      dancer.config.motionTrack = [...recordFrames];
+      alert('녹화가 완료되었습니다!\n이제 [SAVE TO GALLERY] 버튼을 누르면 이 모션도 함께 갤러리에 저장됩니다.');
+    }
+  }
+
   setTimeout(hudLoop, 50);
 }
+
+// ── RECORD BUTTON ─────────────────────────────────────────────────────────────
+document.getElementById('btnRec').addEventListener('click', () => {
+  if (!camOn || isRecording) return;
+  isRecording = true;
+  recordFrames = [];
+  document.getElementById('btnRec').textContent = '녹화중...';
+  document.getElementById('btnRec').style.background = '#cc0000';
+});
 
 // ── SAVE BUTTON ───────────────────────────────────────────────────────────────
 document.getElementById('btnSave').addEventListener('click', () => {

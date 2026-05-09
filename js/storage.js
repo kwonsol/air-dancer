@@ -53,8 +53,25 @@ const DancerStorage = {
     catch (e) { console.error('[Storage] save failed', e); }
   },
 
+  getDeletedSamples() {
+    try {
+      const raw = localStorage.getItem('airDancer_deletedSamples');
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  },
+
+  deleteSample(id) {
+    const deleted = this.getDeletedSamples();
+    if (!deleted.includes(id)) {
+      deleted.push(id);
+      localStorage.setItem('airDancer_deletedSamples', JSON.stringify(deleted));
+    }
+  },
+
   getAllDancers() {
-    return [...SAMPLE_DANCERS, ...this.loadUserDancers()];
+    const deleted = this.getDeletedSamples();
+    const activeSamples = SAMPLE_DANCERS.filter(s => !deleted.includes(s.id));
+    return [...activeSamples, ...this.loadUserDancers()];
   },
 
   addDancer(config) {

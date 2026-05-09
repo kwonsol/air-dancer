@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AIR DANCER — 광고풍선인형 전시</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
   <style>
     body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
@@ -164,37 +165,20 @@
     </div>
 
     <div class="hero-canvas-wrap">
-      <canvas id="heroCanvas" width="200" height="340"></canvas>
+      <div id="heroCanvas" style="width:200px; height:340px;"></div>
     </div>
   </div>
 
-  <div class="card-row">
-    <a href="create.html" class="card-link">
-      <div class="card-num">01 ——</div>
-      <div class="card-name">CREATE</div>
-      <div class="card-sub">색깔, 머리, 얼굴, 장식, 글자를 조합해 나만의 광고풍선인형을 만든다</div>
-      <div class="card-arrow">→</div>
-    </a>
-    <a href="dance.html" class="card-link">
-      <div class="card-num">02 ——</div>
-      <div class="card-name">DANCE</div>
-      <div class="card-sub">웹캠으로 손동작을 인식시켜 내 인형을 실시간으로 춤추게 만든다</div>
-      <div class="card-arrow">→</div>
-    </a>
-    <a href="gallery.html" class="card-link">
-      <div class="card-num">03 ——</div>
-      <div class="card-name">GALLERY</div>
-      <div class="card-sub">온라인 광장에 내 인형을 전시하고 다른 사람의 인형을 구경한다</div>
-      <div class="card-arrow">→</div>
-    </a>
-  </div>
+
 </div>
 
 <script src="js/dancer.js"></script>
 <script>
-  const canvas  = document.getElementById('heroCanvas');
-  const ctx     = canvas.getContext('2d');
-  const dancer  = new AirDancer({ colorIndex: 0, headStyle: 0, faceStyle: 0, decoration: 1, hatStyle: 2, bodyText: 'DANCE' });
+  const container = document.getElementById('heroCanvas');
+  const scene     = new DancerScene(container);
+  const dancer    = new AirDancer({ colorIndex: 0, headStyle: 0, faceStyle: 0, decoration: 1, hatStyle: 2, bodyText: 'DANCE' });
+  scene.setDancer(dancer);
+  scene.start();
 
   // Cycle through dancers to show variety
   const presets = [
@@ -207,18 +191,8 @@
   setInterval(() => {
     presetIdx = (presetIdx + 1) % presets.length;
     Object.assign(dancer.config, presets[presetIdx]);
+    dancer.rebuild();
   }, 2800);
-
-  let last = performance.now();
-  function loop(now) {
-    const dt = Math.min((now - last) / 1000, 0.05);
-    last = now;
-    dancer.update(dt);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    dancer.draw(ctx, canvas.width / 2, canvas.height - 10, 1);
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
 </script>
 </body>
 </html>

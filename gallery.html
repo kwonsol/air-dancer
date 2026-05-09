@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GALLERY — AIR DANCER</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
   <style>
     body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -221,9 +222,9 @@
     <span style="font-size:0.62rem; opacity:0.4; letter-spacing:0.08em;">드래그로 스크롤 · 인형 클릭으로 선택</span>
   </div>
 
-  <!-- Plaza canvas -->
+  <!-- Plaza 3D area -->
   <div class="plaza-area">
-    <canvas id="plazaCanvas"></canvas>
+    <div id="plazaContainer" style="width:100%; height:100%;"></div>
   </div>
 
   <!-- Scroll track -->
@@ -271,41 +272,19 @@
 <script src="js/dancer.js"></script>
 <script src="js/storage.js"></script>
 <script>
-// ── PLAZA CONSTANTS ───────────────────────────────────────────────────────────
-const PLAZA_W   = 3200;   // total virtual width
-const GROUND_H  = 55;     // height reserved below ground line
-const DANCER_SCALE = 0.82;
-
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let scrollX      = 0;
-let allDancers   = [];   // { config, dancer: AirDancer, x: number, id }
-let selectedId   = null;
-let placeModeOn  = false;
-let autoScrollOn = false;
-let autoScrollDir = 1;
+let selectedId  = null;
+let placeModeOn = false;
 
-// ── CANVAS SETUP ──────────────────────────────────────────────────────────────
-const canvas = document.getElementById('plazaCanvas');
-const ctx    = canvas.getContext('2d');
-
-function resizeCanvas() {
-  const area = canvas.parentElement;
-  canvas.width  = area.clientWidth;
-  canvas.height = area.clientHeight;
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+// ── 3D PLAZA SCENE ───────────────────────────────────────────────────────────
+const plazaContainer = document.getElementById('plazaContainer');
+const plaza = new PlazaScene(plazaContainer);
 
 // ── LOAD DANCERS ──────────────────────────────────────────────────────────────
 function loadDancers() {
   const configs = DancerStorage.getAllDancers();
-  allDancers = configs.map(cfg => ({
-    config:  cfg,
-    dancer:  new AirDancer(cfg),
-    x:       cfg.x || 200,
-    id:      cfg.id,
-  }));
-  document.getElementById('dancerCount').textContent = allDancers.length + ' DANCERS';
+  plaza.loadDancers(configs);
+  document.getElementById('dancerCount').textContent = configs.length + ' DANCERS';
 
   // Check if user has a dancer
   const hasMine = DancerStorage.loadUserDancers().length > 0;
@@ -320,229 +299,73 @@ function loadDancers() {
 }
 loadDancers();
 
-// ── MAIN LOOP ─────────────────────────────────────────────────────────────────
-let lastT = performance.now();
-
-function loop(now) {
-  const dt = Math.min((now - lastT) / 1000, 0.05);
-  lastT = now;
-
-  allDancers.forEach(d => d.dancer.update(dt));
-
-  if (autoScrollOn) {
-    scrollX += autoScrollDir * 60 * dt;
-    const maxScroll = PLAZA_W - canvas.width;
-    if (scrollX >= maxScroll) { scrollX = maxScroll; autoScrollDir = -1; }
-    if (scrollX <= 0)         { scrollX = 0;         autoScrollDir =  1; }
+// ── PLAZA CALLBACKS ───────────────────────────────────────────────────────────
+plaza.onSelect = (entry) => {
+  if (entry) {
+    selectedId = entry.id;
+    showInfo(entry);
+  } else {
+    selectedId = null;
+    showInfo(null);
   }
+};
 
-  scrollX = Math.max(0, Math.min(PLAZA_W - canvas.width, scrollX));
-
-  draw();
-  updateScrollThumb();
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-
-// ── DRAW ─────────────────────────────────────────────────────────────────────
-function draw() {
-  const W = canvas.width;
-  const H = canvas.height;
-  const groundY = H - GROUND_H;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // Background
-  ctx.fillStyle = '#fafafa';
-  ctx.fillRect(0, 0, W, H);
-
-  // Subtle vertical grid
-  ctx.strokeStyle = '#ebebeb';
-  ctx.lineWidth   = 1;
-  const gridStep  = 80;
-  const startGrid = -(scrollX % gridStep);
-  for (let x = startGrid; x < W; x += gridStep) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, groundY); ctx.stroke();
-  }
-
-  // "SKY" label strip
-  ctx.fillStyle   = '#f0f0f0';
-  ctx.fillRect(0, 0, W, 22);
-  ctx.fillStyle   = '#aaa';
-  ctx.font        = '8px Courier New';
-  ctx.textAlign   = 'left';
-  // X position markers every 200px
-  const firstMark = Math.floor(scrollX / 200) * 200;
-  for (let vx = firstMark; vx < scrollX + W; vx += 200) {
-    const sx = vx - scrollX;
-    ctx.fillText('x=' + vx, sx + 3, 14);
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(sx, 22); ctx.lineTo(sx, groundY); ctx.stroke();
-  }
-
-  // Ground
-  ctx.fillStyle = '#e8e8e8';
-  ctx.fillRect(0, groundY, W, H - groundY);
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth   = 2.5;
-  ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
-
-  // Ground texture — small brick-ish marks
-  ctx.strokeStyle = '#d0d0d0';
-  ctx.lineWidth   = 1;
-  for (let x = startGrid; x < W; x += 40) {
-    ctx.beginPath(); ctx.moveTo(x, groundY); ctx.lineTo(x, groundY + 16); ctx.stroke();
-  }
-
-  // Draw each dancer
-  ctx.save();
-  ctx.translate(-scrollX, 0);
-
-  allDancers.forEach(d => {
-    const sx = d.x;
-    // Only draw if in visible range (with margin)
-    if (sx < scrollX - 200 || sx > scrollX + canvas.width + 200) return;
-
-    // Selection ring
-    if (d.id === selectedId) {
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth   = 2;
-      ctx.setLineDash([4, 3]);
-      ctx.strokeRect(sx - 55, groundY - 240 * DANCER_SCALE - 10, 110, 255 * DANCER_SCALE + 10);
-      ctx.setLineDash([]);
-    }
-
-    d.dancer.draw(ctx, sx, groundY, DANCER_SCALE);
-
-    // Name tag below dancer
-    const name = (d.config.name || d.id).substring(0, 12);
-    ctx.fillStyle = d.id === selectedId ? '#000' : '#888';
-    ctx.font      = `bold ${d.id === selectedId ? 9 : 8}px Courier New`;
-    ctx.textAlign = 'center';
-    ctx.fillText(name, sx, groundY + 22);
-  });
-
-  ctx.restore();
-
-  // Place-mode overlay
+plaza.onPlace = (worldX) => {
   if (placeModeOn) {
-    ctx.fillStyle = 'rgba(57,255,20,0.08)';
-    ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = 'rgba(57,255,20,0.6)';
-    ctx.lineWidth   = 2;
-    ctx.setLineDash([6, 4]);
-    ctx.strokeRect(2, 2, W - 4, H - 4);
-    ctx.setLineDash([]);
-    ctx.fillStyle   = '#000';
-    ctx.font        = 'bold 11px Courier New';
-    ctx.textAlign   = 'center';
-    ctx.fillText('CLICK TO PLACE YOUR DANCER — ESC to cancel', W / 2, 38);
+    const pixelX = Math.round(worldX * 55);
+    placeDancerAt(pixelX);
+    placeModeOn = false;
+    plaza.placeMode = false;
+    document.getElementById('btnPlaceMode').textContent = 'CLICK TO PLACE';
   }
-}
+};
 
-// ── SCROLLBAR ─────────────────────────────────────────────────────────────────
+// Start the 3D scene
+plaza.start();
+
+// ── SCROLLBAR (simplified — maps to plaza camera) ─────────────────────────────
 const scrollTrack = document.getElementById('scrollTrack');
 const scrollThumb = document.getElementById('scrollThumb');
 
 function updateScrollThumb() {
-  const trackW  = scrollTrack.clientWidth;
-  const ratio   = canvas.width / PLAZA_W;
-  const thumbW  = Math.max(40, trackW * ratio);
-  const thumbX  = (scrollX / (PLAZA_W - canvas.width)) * (trackW - thumbW);
+  const lim = plaza._camLimits;
+  const range = lim.max - lim.min;
+  if (range <= 0) return;
+  const trackW = scrollTrack.clientWidth;
+  const thumbW = Math.max(40, trackW * 0.15);
+  const progress = (plaza._camCurrentX - lim.min) / range;
+  const thumbX = progress * (trackW - thumbW);
   scrollThumb.style.width = thumbW + 'px';
-  scrollThumb.style.left  = thumbX + 'px';
+  scrollThumb.style.left  = Math.max(0, thumbX) + 'px';
 }
+setInterval(updateScrollThumb, 100);
 
 // Drag scrollbar
-let thumbDrag = false, thumbStartX = 0, thumbStartScroll = 0;
+let thumbDrag = false, thumbStartX = 0, thumbStartCam = 0;
 scrollThumb.addEventListener('mousedown', e => {
   thumbDrag = true; thumbStartX = e.clientX;
-  thumbStartScroll = scrollX; e.preventDefault();
+  thumbStartCam = plaza._camTargetX; e.preventDefault();
 });
 document.addEventListener('mousemove', e => {
   if (!thumbDrag) return;
-  const trackW  = scrollTrack.clientWidth;
-  const ratio   = canvas.width / PLAZA_W;
-  const thumbW  = Math.max(40, trackW * ratio);
-  const delta   = e.clientX - thumbStartX;
-  scrollX = thumbStartScroll + delta * (PLAZA_W - canvas.width) / (trackW - thumbW);
+  const lim = plaza._camLimits;
+  const range = lim.max - lim.min;
+  const trackW = scrollTrack.clientWidth;
+  const thumbW = Math.max(40, trackW * 0.15);
+  const delta = e.clientX - thumbStartX;
+  plaza._camTargetX = thumbStartCam + delta * range / (trackW - thumbW);
 });
 document.addEventListener('mouseup', () => { thumbDrag = false; });
 
 // Click on track
 scrollTrack.addEventListener('click', e => {
   if (thumbDrag) return;
-  const rect  = scrollTrack.getBoundingClientRect();
+  const rect = scrollTrack.getBoundingClientRect();
   const clickX = e.clientX - rect.left;
-  const ratio  = canvas.width / PLAZA_W;
-  const thumbW = Math.max(40, scrollTrack.clientWidth * ratio);
-  scrollX = (clickX / scrollTrack.clientWidth) * (PLAZA_W - canvas.width + thumbW) - thumbW / 2;
+  const lim = plaza._camLimits;
+  const range = lim.max - lim.min;
+  plaza._camTargetX = lim.min + (clickX / scrollTrack.clientWidth) * range;
 });
-
-// ── CANVAS INTERACTION ────────────────────────────────────────────────────────
-let isDragging = false, dragStartX = 0, dragStartScroll = 0;
-let dragMoved  = false;
-
-canvas.addEventListener('mousedown', e => {
-  isDragging = true; dragMoved = false;
-  dragStartX = e.clientX; dragStartScroll = scrollX;
-});
-
-document.addEventListener('mousemove', e => {
-  if (!isDragging) return;
-  const dx = e.clientX - dragStartX;
-  if (Math.abs(dx) > 3) dragMoved = true;
-  if (!placeModeOn) scrollX = dragStartScroll - dx;
-});
-
-document.addEventListener('mouseup', e => {
-  if (!isDragging) return;
-  isDragging = false;
-  if (!dragMoved) handleCanvasClick(e);
-});
-
-// Touch support
-let touchStartX = 0, touchStartScroll = 0;
-canvas.addEventListener('touchstart', e => {
-  touchStartX = e.touches[0].clientX;
-  touchStartScroll = scrollX;
-}, { passive: true });
-canvas.addEventListener('touchmove', e => {
-  const dx = e.touches[0].clientX - touchStartX;
-  if (!placeModeOn) scrollX = touchStartScroll - dx;
-}, { passive: true });
-
-// ── CLICK HANDLING ────────────────────────────────────────────────────────────
-function handleCanvasClick(e) {
-  const rect  = canvas.getBoundingClientRect();
-  const clickX = e.clientX - rect.left + scrollX;
-  const clickY = e.clientY - rect.top;
-  const groundY = canvas.height - GROUND_H;
-
-  if (placeModeOn) {
-    // Place my dancer at this position
-    placeDancerAt(Math.round(clickX));
-    placeModeOn = false;
-    canvas.classList.remove('place-mode');
-    document.getElementById('btnPlaceMode').textContent = 'CLICK TO PLACE';
-    return;
-  }
-
-  // Hit-test: find dancer within click range
-  let hit = null;
-  let minDist = 999;
-  allDancers.forEach(d => {
-    const dist = Math.abs(d.x - clickX);
-    const yInRange = clickY < groundY && clickY > groundY - 240 * DANCER_SCALE;
-    if (dist < 60 && yInRange && dist < minDist) {
-      hit = d; minDist = dist;
-    }
-  });
-
-  selectedId = hit ? hit.id : null;
-  showInfo(hit);
-}
 
 // ── INFO PANEL ────────────────────────────────────────────────────────────────
 function showInfo(d) {
@@ -558,50 +381,47 @@ function showInfo(d) {
   empty.style.display   = 'none';
   content.style.display = 'block';
 
-  const color = DANCER_COLORS[d.config.colorIndex] || DANCER_COLORS[0];
-  const isUser = !d.config.isSample;
+  const cfg = d.config;
+  const color = DANCER_COLORS[cfg.colorIndex] || DANCER_COLORS[0];
+  const isUser = !cfg.isSample;
 
   content.innerHTML = `
     <div style="font-size:0.9rem; font-weight:900; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px; border-bottom:2px solid #000; padding-bottom:6px;">
-      ${d.config.name || d.id}
+      ${cfg.name || d.id}
     </div>
     <div class="dancer-info-grid">
       <div>
         <div class="di-key">COLOR</div>
         <div class="di-val">
-          <span class="di-swatch" style="background:${color.body}"></span>${color.name}
+          <span class="di-swatch" style="background:${color.bodyHex}"></span>${color.name}
         </div>
       </div>
       <div>
-        <div class="di-key">HEAD</div>
-        <div class="di-val">${HEAD_STYLES[d.config.headStyle] || '—'}</div>
+        <div class="di-key">EYES</div>
+        <div class="di-val">STYLE ${cfg.faceStyle + 1}</div>
       </div>
       <div>
-        <div class="di-key">FACE</div>
-        <div class="di-val">${FACE_STYLES[d.config.faceStyle] || '—'}</div>
+        <div class="di-key">MOUTH</div>
+        <div class="di-val">STYLE ${cfg.mouthStyle !== undefined ? cfg.mouthStyle + 1 : 1}</div>
       </div>
       <div>
         <div class="di-key">DECO</div>
-        <div class="di-val">${DECO_STYLES[d.config.decoration] || '—'}</div>
+        <div class="di-val">${cfg.decoration > 0 ? `STYLE ${cfg.decoration}` : 'NONE'}</div>
       </div>
       <div>
         <div class="di-key">HAT</div>
-        <div class="di-val">${HAT_STYLES[d.config.hatStyle] || '—'}</div>
+        <div class="di-val">${cfg.hatStyle > 0 ? `STYLE ${cfg.hatStyle}` : 'NONE'}</div>
       </div>
       <div>
         <div class="di-key">TEXT</div>
-        <div class="di-val">${d.config.bodyText || '—'}</div>
-      </div>
-      <div>
-        <div class="di-key">POSITION</div>
-        <div class="di-val">x = ${Math.round(d.x)}</div>
+        <div class="di-val">${cfg.bodyText || '—'}</div>
       </div>
       <div>
         <div class="di-key">TYPE</div>
         <div class="di-val">${isUser ? '★ MY DANCER' : 'SAMPLE'}</div>
       </div>
     </div>
-    ${isUser ? `<button class="btn delete-btn" onclick="deleteDancer('${d.id}')">DELETE</button>` : ''}
+    <button class="btn delete-btn" onclick="deleteDancer('${d.id}', ${cfg.isSample})">DELETE</button>
   `;
 }
 
@@ -612,16 +432,9 @@ function placeDancerAt(x) {
     alert('먼저 CREATE에서 인형을 만들고 저장해 주세요.');
     return;
   }
-  // Place the most recently created user dancer
   const last = users[users.length - 1];
   DancerStorage.updatePosition(last.id, x);
-
-  // Update in allDancers
-  const entry = allDancers.find(d => d.id === last.id);
-  if (entry) {
-    entry.x = x;
-  }
-
+  plaza.updateDancerPosition(last.id, x);
   document.getElementById('placeXInput').value = x;
 }
 
@@ -632,7 +445,7 @@ document.getElementById('btnPlaceMode').addEventListener('click', () => {
     return;
   }
   placeModeOn = !placeModeOn;
-  canvas.classList.toggle('place-mode', placeModeOn);
+  plaza.placeMode = placeModeOn;
   document.getElementById('btnPlaceMode').textContent = placeModeOn ? 'CANCEL (ESC)' : 'CLICK TO PLACE';
 });
 
@@ -644,29 +457,47 @@ document.getElementById('btnPlaceAt').addEventListener('click', () => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && placeModeOn) {
     placeModeOn = false;
-    canvas.classList.remove('place-mode');
+    plaza.placeMode = false;
     document.getElementById('btnPlaceMode').textContent = 'CLICK TO PLACE';
   }
 });
 
 // ── DELETE DANCER ─────────────────────────────────────────────────────────────
-function deleteDancer(id) {
+function deleteDancer(id, isSample) {
   if (!confirm('이 인형을 삭제할까요?')) return;
-  DancerStorage.removeDancer(id);
-  allDancers = allDancers.filter(d => d.id !== id);
+  
+  if (isSample) {
+    // 샘플인 경우 로컬 스토리지의 삭제된 샘플 목록에 추가하여 영구 제외
+    DancerStorage.deleteSample(id);
+  } else {
+    // 유저가 만든 인형인 경우 스토리지에서 완전 삭제
+    DancerStorage.removeDancer(id);
+  }
+  
   selectedId = null;
   showInfo(null);
-  document.getElementById('dancerCount').textContent = allDancers.length + ' DANCERS';
-  loadDancers(); // reload to refresh counts
+  loadDancers();
 }
 
 // ── AUTO SCROLL ───────────────────────────────────────────────────────────────
+let autoScrollOn = false;
+let autoScrollDir = 1;
+
 document.getElementById('btnAutoScroll').addEventListener('click', () => {
   autoScrollOn = !autoScrollOn;
   document.getElementById('btnAutoScroll').textContent = autoScrollOn ? 'STOP' : 'AUTO SCROLL';
   if (autoScrollOn) document.getElementById('btnAutoScroll').classList.add('btn-green');
   else              document.getElementById('btnAutoScroll').classList.remove('btn-green');
 });
+
+// Auto-scroll via interval that nudges the camera target
+setInterval(() => {
+  if (!autoScrollOn) return;
+  const lim = plaza._camLimits;
+  plaza._camTargetX += autoScrollDir * 0.08;
+  if (plaza._camTargetX >= lim.max) { plaza._camTargetX = lim.max; autoScrollDir = -1; }
+  if (plaza._camTargetX <= lim.min) { plaza._camTargetX = lim.min; autoScrollDir =  1; }
+}, 30);
 </script>
 </body>
 </html>
