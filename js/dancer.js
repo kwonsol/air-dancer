@@ -1218,6 +1218,7 @@ class PlazaScene {
     const h = this.container.clientHeight || 400;
     this.renderer.setSize(w, h);
     this.renderer.shadowMap.enabled = true;
+    this.renderer.domElement.style.display = 'block';
     this.container.appendChild(this.renderer.domElement);
   }
 
@@ -1292,14 +1293,6 @@ class PlazaScene {
     grid.position.y = 0.002;
     this.scene.add(grid);
 
-    // ── 앞쪽 경계선 (형광 녹색) ─────────────────────────────────────────────
-    const pts = [
-      new THREE.Vector3(-50, 0.005, 2),
-      new THREE.Vector3( 50, 0.005, 2),
-    ];
-    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x39FF14 });
-    this.scene.add(new THREE.Line(lineGeo, lineMat));
   }
 
   _initInteraction() {
