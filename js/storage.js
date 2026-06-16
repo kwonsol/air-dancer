@@ -81,7 +81,9 @@ const DancerStorage = {
       ...config,
       id:        'user_' + Date.now(),
       name:      config.name || ('DANCER #' + String(num).padStart(3, '0')),
-      x:         config.x ?? (1400 + users.length * 240),
+      // 새 인형은 갤러리 왼쪽(-x 방향)에 배치합니다.
+      // 첫 번째 유저: x=-240, 두 번째: x=-480 … 샘플들(x=180~1140)보다 항상 왼쪽
+      x:         config.x ?? (-(users.length + 1) * 240),
       isSample:  false,
       createdAt: Date.now(),
     };

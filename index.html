@@ -3,196 +3,478 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIR DANCER — 광고풍선인형 전시</title>
+  <title>AIR DANCER</title>
   <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Noto Serif 폰트 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,opsz,wght@0,6..72,100..900;1,6..72,100..900&display=swap" rel="stylesheet">
+
   <style>
-    body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+    /* ── 전역 리셋 ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .hero {
-      flex: 1;
-      display: grid;
-      grid-template-rows: 1fr auto;
+    body {
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
+      background: linear-gradient(180deg, #7F92FF 0%, #FCFCFF 100%);
+      font-family: "Noto Serif", serif;
+      font-optical-sizing: auto;
+      font-variation-settings: "wdth" 100;
+      position: relative;
     }
 
-    .hero-main {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 60px;
-      padding: 30px 40px;
-      overflow: hidden;
+    /* ────────────────────────────────────────────────
+       상단 좌측: 코스 정보
+    ──────────────────────────────────────────────── */
+    .course-info {
+      position: absolute;
+      top: 20px;
+      left: 22px;
+      color: #39FF14;
+      font-size: clamp(0.55rem, 0.85vw, 0.72rem);
+      line-height: 1.65;
+      letter-spacing: 0.03em;
+      z-index: 50;
     }
 
-    .hero-text { flex: 1; max-width: 520px; }
-
-    .hero-eyebrow {
-      font-size: 0.68rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      border: 2px solid var(--black);
-      display: inline-block;
-      padding: 3px 12px;
-      margin-bottom: 18px;
-    }
-
-    .hero-title {
-      font-size: clamp(3.2rem, 8vw, 7rem);
-      font-weight: 900;
-      line-height: 0.92;
-      letter-spacing: -0.01em;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-
-    .hero-title .green-line {
-      display: block;
-      color: var(--black);
-      -webkit-text-stroke: 0px;
-      background: var(--green);
-      padding: 0 6px;
-    }
-
-    .hero-desc {
-      font-size: 0.78rem;
-      line-height: 1.7;
-      letter-spacing: 0.04em;
-      max-width: 380px;
-      opacity: 0.7;
-      margin-bottom: 28px;
-    }
-
-    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-    .hero-canvas-wrap {
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      height: 100%;
-      max-height: 380px;
-    }
-
-    .hero-canvas-wrap canvas {
-      display: block;
-      image-rendering: pixelated;
-    }
-
-    /* bottom card row */
-    .card-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      border-top: var(--border);
-    }
-
-    .card-link {
-      padding: 20px 22px;
-      border-right: var(--border);
+    /* ────────────────────────────────────────────────
+       상단 우측: About 버튼
+    ──────────────────────────────────────────────── */
+    .about-btn {
+      position: absolute;
+      top: 16px;
+      right: 22px;
+      border: 2px solid #39FF14;
+      color: #39FF14;
+      padding: 5px 22px;
+      font-family: "Noto Serif", serif;
+      font-size: clamp(0.7rem, 1.1vw, 0.9rem);
+      background: transparent;
+      cursor: pointer;
       text-decoration: none;
-      color: var(--black);
+      z-index: 50;
+      transition: background 0.15s;
+    }
+    .about-btn:hover { background: rgba(57, 255, 20, 0.12); }
+
+    /* ────────────────────────────────────────────────
+       About 드롭다운 패널
+    ──────────────────────────────────────────────── */
+    .about-panel {
+      position: absolute;
+      top: 52px;
+      right: 22px;
+      width: clamp(280px, 30vw, 420px);
+      background: linear-gradient(180deg, #ffffff 0%, #d8dcff 100%);
+      border: 2px solid #39FF14;
+      padding: 28px 32px 32px;
+      z-index: 200;
+      display: none;
+      font-family: "Noto Serif", serif;
+      color: #E8007F;
+    }
+    .about-panel.open { display: block; }
+
+    .about-panel .ap-section { margin-bottom: 28px; }
+    .about-panel .ap-section:last-child { margin-bottom: 0; }
+
+    .about-panel .ap-title {
+      font-size: clamp(0.85rem, 1.2vw, 1rem);
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #E8007F;
+      line-height: 1.3;
+    }
+    .about-panel .ap-body {
+      font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+      font-weight: 400;
+      line-height: 1.65;
+      color: #E8007F;
+    }
+
+    /* ────────────────────────────────────────────────
+       로고 (중앙 상단 — plaza 프레임과 겹침)
+    ──────────────────────────────────────────────── */
+    .logo-wrap {
+      position: absolute;
+      top: 1vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: clamp(360px, 56vw, 760px);
+      z-index: 40;
+      pointer-events: none;
+    }
+    .logo-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ────────────────────────────────────────────────
+       중앙 Plaza 프레임 (둥근 사각형, 3D 씬 담김)
+    ──────────────────────────────────────────────── */
+    .plaza-frame {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      top: 18%;
+      bottom: 15%;
+      border-radius: 999px;
+      overflow: hidden;
+      z-index: 10;
+      border: 2px solid #000;
+    }
+
+    #plazaPreview {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ────────────────────────────────────────────────
+       왼쪽 말풍선
+    ──────────────────────────────────────────────── */
+    .bubble-left {
+      position: absolute;
+      left: 4%;
+      top: 34%;
+      width: clamp(130px, 14vw, 200px);
+      z-index: 35;
+      pointer-events: none;
+    }
+    .bubble-left img { width: 100%; height: auto; display: block; }
+    .bubble-left .bubble-text {
+      position: absolute;
+      top: 18%;
+      left: 14%;
+      right: 10%;
+      bottom: 30%;
       display: flex;
-      flex-direction: column;
-      transition: background 0.08s;
+      align-items: center;
+      font-size: clamp(0.58rem, 1vw, 0.76rem);
+      line-height: 1.45;
+      color: #1a1a1a;
     }
 
-    .card-link:last-child { border-right: none; }
-    .card-link:hover { background: var(--green); }
-
-    .card-num {
-      font-size: 0.62rem;
-      letter-spacing: 0.2em;
-      opacity: 0.45;
-      margin-bottom: 8px;
+    /* ────────────────────────────────────────────────
+       오른쪽 말풍선
+    ──────────────────────────────────────────────── */
+    .bubble-right {
+      position: absolute;
+      right: 1.5%;
+      bottom: 18%;
+      width: clamp(130px, 14vw, 200px);
+      z-index: 35;
+      pointer-events: none;
+    }
+    .bubble-right img { width: 100%; height: auto; display: block; }
+    .bubble-right .bubble-text {
+      position: absolute;
+      top: 14%;
+      left: 14%;
+      right: 12%;
+      bottom: 26%;
+      display: flex;
+      align-items: center;
+      font-size: clamp(0.58rem, 1vw, 0.76rem);
+      line-height: 1.45;
+      color: #1a1a1a;
     }
 
-    .card-name {
-      font-size: 1.5rem;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+    /* ────────────────────────────────────────────────
+       하단 CTA 버튼 두 개
+    ──────────────────────────────────────────────── */
+    .btn-row {
+      position: absolute;
+      bottom: 2.5%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 14px;
+      z-index: 35;
+      width: 76%;
+      max-width: 840px;
+    }
+
+    .cta-btn {
       flex: 1;
-      margin-bottom: 6px;
+      padding: 15px 20px;
+      font-family: "Noto Serif", serif;
+      font-optical-sizing: auto;
+      font-variation-settings: "wdth" 100;
+      font-size: clamp(0.9rem, 2.8vw, 2rem);
+      font-weight: 400;
+      text-align: center;
+      text-decoration: none;
+      color: #111;
+      border: 1px solid #000;
+      cursor: pointer;
+      background: linear-gradient(180deg, #5F84FF 0%, #91D271 100%);
+      display: block;
+      border-radius: 0;
+      transition: opacity 0.12s;
+    }
+    .cta-btn:hover {
+      opacity: 1;
+      box-shadow: inset 0 4px 14px rgba(0,0,0,0.28);
     }
 
-    .card-sub {
-      font-size: 0.7rem;
-      line-height: 1.55;
-      opacity: 0.65;
-      margin-bottom: 12px;
+    /* ────────────────────────────────────────────────
+       댄서 이름 말풍선 (JS로 plaza-frame 안에 생성)
+    ──────────────────────────────────────────────── */
+    .name-pill {
+      position: absolute;
+      border: 1px solid #E8007F;
+      border-radius: 999px;
+      padding: 2px 14px;
+      font-family: "Noto Serif", serif;
+      font-size: clamp(0.55rem, 0.8vw, 0.7rem);
+      letter-spacing: 0.04em;
+      color: #111;
+      white-space: nowrap;
+      background: #ffffff;
+      pointer-events: none;
+      /* 납작한 타원형: 세로 padding 최소화, 가로 padding 강조 */
+      line-height: 1.2;
     }
 
-    .card-arrow { font-size: 1.3rem; font-weight: 900; align-self: flex-end; }
-
-    @media (max-width: 700px) {
-      body { overflow: auto; height: auto; }
-      .hero-main { flex-direction: column; gap: 20px; }
-      .hero-canvas-wrap { max-height: 250px; }
-      .card-row { grid-template-columns: 1fr; }
-      .card-link { border-right: none; border-bottom: var(--border); }
+    /* ────────────────────────────────────────────────
+       떠다니는 파츠 이미지 (광고풍선/말풍선 스타일)
+    ──────────────────────────────────────────────── */
+    .floating-part {
+      position: fixed;
+      pointer-events: none;
+      z-index: 200;
+      /* 부드러운 그림자로 입체감 */
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.15));
     }
   </style>
 </head>
 <body>
 
-<header class="site-header">
-  <a href="index.html" class="site-logo">AIR DANCER</a>
-  <nav class="site-nav">
-    <a href="create.html">CREATE</a>
-    <a href="dance.html">DANCE</a>
-    <a href="gallery.html">GALLERY</a>
-  </nav>
-</header>
-
-<div class="hero">
-  <div class="hero-main">
-    <div class="hero-text">
-      <span class="hero-eyebrow">광고풍선인형 온라인 전시 프로젝트</span>
-      <h1 class="hero-title">
-        <span>AIR</span>
-        <span class="green-line">DANCER</span>
-        <span>PROJECT</span>
-      </h1>
-      <p class="hero-desc">
-        나만의 광고풍선인형을 만들고, 웹캠으로 춤추게 하고,<br>
-        온라인 광장에 전시하세요. 다른 사람의 인형도 구경하세요.
-      </p>
-      <div class="hero-actions">
-        <a href="create.html" class="btn btn-green">CREATE MY DANCER →</a>
-        <a href="gallery.html" class="btn">VIEW GALLERY</a>
-      </div>
-    </div>
-
-    <div class="hero-canvas-wrap">
-      <div id="heroCanvas" style="width:200px; height:340px;"></div>
-    </div>
-  </div>
-
-
+<!-- ── 코스 정보 ─────────────────────────────────── -->
+<div class="course-info">
+  UI Design Programming<br>
+  Project 02<br>
+  <br>
+  Sol Kwon
 </div>
 
-<script src="js/dancer.js"></script>
-<script>
-  const container = document.getElementById('heroCanvas');
-  const scene     = new DancerScene(container);
-  const dancer    = new AirDancer({ colorIndex: 0, headStyle: 0, faceStyle: 0, decoration: 1, hatStyle: 2, bodyText: 'DANCE' });
-  scene.setDancer(dancer);
-  scene.start();
+<!-- ── About 버튼 + 패널 ──────────────────────────────── -->
+<button id="aboutBtn" class="about-btn" type="button">About</button>
 
-  // Cycle through dancers to show variety
-  const presets = [
-    { colorIndex: 0, headStyle: 0, faceStyle: 0, decoration: 1, hatStyle: 2, bodyText: 'DANCE' },
-    { colorIndex: 1, headStyle: 1, faceStyle: 2, decoration: 3, hatStyle: 0, bodyText: 'YEAH' },
-    { colorIndex: 2, headStyle: 2, faceStyle: 1, decoration: 2, hatStyle: 3, bodyText: 'FLEX' },
-    { colorIndex: 5, headStyle: 3, faceStyle: 4, decoration: 4, hatStyle: 1, bodyText: 'WOW' },
-  ];
-  let presetIdx = 0;
-  setInterval(() => {
-    presetIdx = (presetIdx + 1) % presets.length;
-    Object.assign(dancer.config, presets[presetIdx]);
-    dancer.rebuild();
-  }, 2800);
+<div id="aboutPanel" class="about-panel">
+  <div class="ap-section">
+    <div class="ap-title">About the Project</div>
+    <div class="ap-body">Wobby is a playful platform for creating custom advertising balloons. Design your own inflatable dancer and bring your ideas to life through movement.</div>
+  </div>
+  <div class="ap-section">
+    <div class="ap-title">Explore the Plaza</div>
+    <div class="ap-body">Browse a collection of advertising balloons created by other users. Discover unique designs, messages, and personalities dancing in motion.</div>
+  </div>
+  <div class="ap-section">
+    <div class="ap-title">Create Your Balloon</div>
+    <div class="ap-body">Build your own custom inflatable dancer. Choose its shape, colors, and message, then watch it dance however you like.</div>
+  </div>
+</div>
+
+<!-- ── 로고 ────────────────────────────────────── -->
+<div class="logo-wrap">
+  <img src="Image/Logo.svg" alt="AIR DANCER">
+</div>
+
+<!-- ── Plaza 3D 프레임 ─────────────────────────── -->
+<div class="plaza-frame" id="plazaFrame">
+  <div id="plazaPreview"></div>
+</div>
+
+<!-- ── 왼쪽 말풍선 ─────────────────────────────── -->
+<div class="bubble-left">
+  <img src="Image/message1.png" alt="">
+  <div class="bubble-text">
+    Create your<br>own inflatable<br>dancer
+  </div>
+</div>
+
+<!-- ── 오른쪽 말풍선 ────────────────────────────── -->
+<div class="bubble-right">
+  <img src="Image/message2.svg" alt="">
+  <div class="bubble-text">
+    Discover what<br>others have created<br>in the Plaza.
+  </div>
+</div>
+
+<!-- ── 하단 버튼 ─────────────────────────────────── -->
+<div class="btn-row">
+  <a href="create.html" class="cta-btn">Create My Dancer</a>
+  <a href="gallery.html" class="cta-btn">Go to the Plaza</a>
+</div>
+
+<!-- ── 떠다니는 파츠 이미지 두 개 ──────────────────── -->
+<img id="floatPart1" class="floating-part" src="Image/eyes/eye-02.png" alt="">
+<img id="floatPart2" class="floating-part" src="Image/hat/hat-07.png" alt="">
+
+
+<script src="js/dancer.js"></script>
+<script src="js/storage.js"></script>
+<script>
+
+// ════════════════════════════════════════════════════════
+// 1. Plaza 3D 미리보기
+// ════════════════════════════════════════════════════════
+
+const plazaContainer = document.getElementById('plazaPreview');
+const plaza = new PlazaScene(plazaContainer);
+
+// 갤러리에 저장된 모든 인형을 불러옵니다.
+const configs = DancerStorage.getAllDancers();
+plaza.loadDancers(configs);
+plaza.start();
+
+// 3D 씬 배경을 바깥 그라디언트와 어울리는 하늘색으로 설정
+// (plaza-bg.png 로컬 로드 실패 시 검은 배경 대신 스카이블루 배경으로 대체)
+plaza.scene.background = new THREE.Color(0x9fc8ef);
+
+// ── 자동 패닝 없음: 프레임 위에 마우스가 있을 때만 wheel로 스크롤 ──
+// PlazaScene._initInteraction() 의 wheel 리스너가 document 대신
+// el(캔버스)에만 붙어있으므로 커서가 프레임 밖이면 스크롤이 무시됨.
+// (dancer.js의 wheel 리스너는 이미 el에만 붙어있음 — 추가 처리 불필요)
+
+
+// ════════════════════════════════════════════════════════
+// 2. 댄서 이름 말풍선 — 플라자 프레임 위에서 둥둥 부유
+// ════════════════════════════════════════════════════════
+
+const frame = document.getElementById('plazaFrame');
+
+configs.forEach((cfg) => {
+  if (!cfg.name) return;
+
+  // pill 엘리먼트 생성
+  const pill = document.createElement('div');
+  pill.className   = 'name-pill';
+  pill.textContent = cfg.name;
+  pill.style.zIndex = 30;
+
+  // 프레임 안 랜덤 초기 위치 (% 단위)
+  let px = 5  + Math.random() * 78;
+  let py = 8  + Math.random() * 74;
+  pill.style.left = px + '%';
+  pill.style.top  = py + '%';
+
+  frame.appendChild(pill);
+
+  // 매우 느린 사인파 부유
+  let   t     = Math.random() * 200;
+  const driftAmp = 0.002 + Math.random() * 0.003;
+  const driftSpeed = 0.006 + Math.random() * 0.004;
+
+  function movePill() {
+    t += 0.3;
+    px += Math.cos(t * driftSpeed) * driftAmp;
+    py += Math.sin(t * driftSpeed * 0.7) * driftAmp;
+
+    // 경계 유지
+    if (px < 1)  px = 1;
+    if (px > 86) px = 86;
+    if (py < 1)  py = 1;
+    if (py > 88) py = 88;
+
+    pill.style.left = px + '%';
+    pill.style.top  = py + '%';
+
+    requestAnimationFrame(movePill);
+  }
+  requestAnimationFrame(movePill);
+});
+
+
+// ════════════════════════════════════════════════════════
+// 3. 파츠 이미지 2개 — 광고풍선/말풍선처럼 천천히 떠다니기
+//    사인파 기반 부유 (DVD 튕기기 방식 아님)
+// ════════════════════════════════════════════════════════
+
+function initFloatingPart(el, initX, initY, phaseOffset) {
+  // 크기 설정 — 이전보다 작게
+  el.style.width = 'clamp(48px, 4.5vw, 72px)';
+  el.style.height = 'auto';
+
+  // 기준 위치 (픽셀)
+  const baseX = initX;
+  const baseY = initY;
+
+  // 사인파 진폭과 주파수 — 아주 느리게
+  const ampX  = 14 + Math.random() * 8;   // 좌우 진폭 (px)
+  const ampY  = 10 + Math.random() * 6;   // 상하 진폭 (px)
+  const freqX = 0.00010 + Math.random() * 0.00006;  // 매우 낮은 주파수
+  const freqY = 0.00008 + Math.random() * 0.00005;
+
+  let startTime = null;
+
+  function animate(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const elapsed = timestamp - startTime + phaseOffset;
+
+    const x = baseX + Math.sin(elapsed * freqX * Math.PI * 2) * ampX;
+    const y = baseY + Math.sin(elapsed * freqY * Math.PI * 2) * ampY;
+
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    el.style.position = 'fixed';
+
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// 파츠 1: 화면 왼쪽 중단
+const part1 = document.getElementById('floatPart1');
+const part2 = document.getElementById('floatPart2');
+
+
+// 이미지 로드 후 시작
+part1.onload = () => {
+  initFloatingPart(
+    part1,
+    window.innerWidth * 0.02,   // baseX: 화면 왼쪽 가장자리 근처
+    window.innerHeight * 0.52,  // baseY: 화면 세로 중간
+    0
+  );
+};
+part2.onload = () => {
+  initFloatingPart(
+    part2,
+    window.innerWidth * 0.86,   // baseX: 화면 오른쪽 가장자리 근처
+    window.innerHeight * 0.20,  // baseY: 화면 세로 상단 20%
+    8000                         // phase offset (ms) — 서로 다른 위상
+  );
+};
+
+// 이미 캐시된 경우 onload가 발화 안 할 수 있으므로 보험 처리
+if (part1.complete) part1.onload();
+
+// ════════════════════════════════════════════════════════
+// About 버튼 토글
+// ════════════════════════════════════════════════════════
+const aboutBtn   = document.getElementById('aboutBtn');
+const aboutPanel = document.getElementById('aboutPanel');
+
+aboutBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  aboutPanel.classList.toggle('open');
+});
+
+// 패널 바깥 클릭 시 닫기
+document.addEventListener('click', (e) => {
+  if (!aboutBtn.contains(e.target) && !aboutPanel.contains(e.target)) {
+    aboutPanel.classList.remove('open');
+  }
+});
+if (part2.complete) part2.onload();
+
 </script>
 </body>
 </html>

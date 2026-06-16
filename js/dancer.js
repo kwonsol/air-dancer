@@ -1223,8 +1223,20 @@ class PlazaScene {
 
   _initScene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xffffff);
-    this.scene.fog = new THREE.FogExp2(0xffffff, 0.025);
+
+    // plaza-bg.png 를 배경 이미지로 불러옵니다.
+    // TextureLoader 는 비동기로 동작하므로 콜백에서 scene.background 를 설정합니다.
+    // 이미지가 로드되면 Three.js 가 다음 프레임에 자동으로 반영합니다.
+    const bgLoader = new THREE.TextureLoader();
+    bgLoader.load('plaza-bg.png', (texture) => {
+      // PNG 파일은 sRGB 색공간으로 저장되어 있습니다.
+      // 이 설정이 없으면 Three.js 가 선형(linear) 색공간으로 잘못 판단해
+      // 감마 보정을 두 번 적용하게 되어 이미지가 하얗게 날아갑니다.
+      texture.colorSpace = THREE.SRGBColorSpace;
+      this.scene.background = texture;
+    });
+
+    // 배경 이미지가 공간감을 만들어주므로 안개는 제거합니다.
   }
 
   _initCamera() {
@@ -1236,10 +1248,11 @@ class PlazaScene {
   }
 
   _initLights() {
-    const ambient = new THREE.AmbientLight(0xffffff, 0.08);
+    // 배경이 밝은 낮 이미지(Bliss)이므로 조명도 자연광처럼 밝게 설정합니다.
+    const ambient = new THREE.AmbientLight(0xffffff, 0.75);
     this.scene.add(ambient);
 
-    const main = new THREE.DirectionalLight(0xffffff, 2.8);
+    const main = new THREE.DirectionalLight(0xfff5e0, 1.4);  // 따뜻한 햇빛 색
     main.position.set(4, 10, 6);
     main.castShadow = true;
     main.shadow.camera.left   = -25;
@@ -1250,7 +1263,7 @@ class PlazaScene {
     main.shadow.bias = -0.002;
     this.scene.add(main);
 
-    const rim = new THREE.DirectionalLight(0xffffff, 1.2);
+    const rim = new THREE.DirectionalLight(0xd0e8ff, 0.5);  // 하늘 반사광 (파란빛)
     rim.position.set(-4, 5, -7);
     this.scene.add(rim);
 
@@ -1260,18 +1273,33 @@ class PlazaScene {
   }
 
   _initFloor() {
+    // ── 바닥 평면 ────────────────────────────────────────────────────────────
+    // ShadowMaterial: 그림자만 받고 자체 색은 없는 투명한 재질입니다.
+    // 배경 이미지 잔디가 그대로 보이면서 인형 그림자만 표시됩니다.
     const planeGeo = new THREE.PlaneGeometry(100, 18);
-    const planeMat = new THREE.MeshStandardMaterial({
-      color: 0xf8f8f8, roughness: 0.55, metalness: 0.0,
-    });
-    const plane = new THREE.Mesh(planeGeo, planeMat);
+    const planeMat = new THREE.ShadowMaterial({ opacity: 0.22 });
+    const plane    = new THREE.Mesh(planeGeo, planeMat);
     plane.rotation.x    = -Math.PI / 2;
     plane.receiveShadow = true;
     this.scene.add(plane);
 
-    const grid = new THREE.GridHelper(100, 50, 0xdddddd, 0xe8e8e8);
+    // ── 그리드 ───────────────────────────────────────────────────────────────
+    // 배경 위에서도 보이도록 흰색 반투명 그리드를 사용합니다.
+    const grid = new THREE.GridHelper(100, 50, 0xffffff, 0xffffff);
+    // GridHelper 의 material 에 투명도 적용
+    grid.material.opacity     = 0.15;
+    grid.material.transparent = true;
     grid.position.y = 0.002;
     this.scene.add(grid);
+
+    // ── 앞쪽 경계선 (형광 녹색) ─────────────────────────────────────────────
+    const pts = [
+      new THREE.Vector3(-50, 0.005, 2),
+      new THREE.Vector3( 50, 0.005, 2),
+    ];
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x39FF14 });
+    this.scene.add(new THREE.Line(lineGeo, lineMat));
   }
 
   _initInteraction() {

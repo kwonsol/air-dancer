@@ -18,7 +18,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #f4f4f4;
+      /* 홈화면과 동일한 그라디언트 배경 */
+      background: linear-gradient(180deg, #9fc8ef 0%, #c8e8c0 100%);
       border-bottom: var(--border);
       position: relative;
       padding: 20px;
@@ -32,7 +33,9 @@
       font-size: 0.62rem;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      opacity: 0.45;
+      opacity: 0.55;
+      color: #fff;
+      font-family: "Noto Serif", serif;
     }
 
     .preview-name {
@@ -43,7 +46,7 @@
       font-weight: bold;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      opacity: 0.5;
+      color: rgba(255,255,255,0.7);
     }
 
     /* 색깔 선택 그리드 */
@@ -74,6 +77,7 @@
       text-align: center;
       margin-top: 3px;
       text-transform: uppercase;
+      font-family: "Noto Serif", serif;
     }
 
     /* 눈 디자인 선택 그리드 */
@@ -86,9 +90,9 @@
     .eye-option {
       border: 2.5px solid var(--black);
       cursor: pointer;
-      background: #e8e8e8;   /* 회색 배경: 흰 배경 눈 이미지도 보이도록 */
+      background: rgba(255,255,255,0.6);
       padding: 5px;
-      transition: transform 0.08s;
+      transition: box-shadow 0.1s, transform 0.08s;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -96,12 +100,14 @@
       overflow: hidden;
     }
 
-    .eye-option:hover { transform: scale(1.05); }
+    .eye-option:hover {
+      transform: scale(1.04);
+      box-shadow: inset 0 3px 8px rgba(0,0,0,0.18);
+    }
 
-    /* 선택된 옵션: 녹색 테두리 + 연한 녹색 배경 */
     .eye-option.selected {
-      border-color: var(--green);
-      background:   #d0ffc8;
+      border-color: var(--pink);
+      background: rgba(232, 0, 127, 0.08);
     }
 
     .eye-option img {
@@ -109,7 +115,6 @@
       height: 100%;
       display: block;
       object-fit: contain;
-      image-rendering: auto;
     }
 
     .opt-section { margin-bottom: 4px; }
@@ -121,103 +126,250 @@
     .info-bar {
       font-size: 0.65rem;
       letter-spacing: 0.1em;
-      opacity: 0.5;
+      opacity: 0.65;
       text-transform: uppercase;
       padding: 8px 16px;
-      border-bottom: 2px solid #e0e0e0;
+      border-bottom: var(--border);
+      background: rgba(255,255,255,0.25);
+      font-family: "Noto Serif", serif;
+    }
+
+    .create-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: auto 80px;
+      gap: 20px;
+      padding: 20px;
+      height: 100vh;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 10;
+    }
+
+    .left-panel-wrapper {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      border: none;
+      background: transparent;
+      /* 스크롤바 숨기기 (옵션) */
+      scrollbar-width: none;
+    }
+    .left-panel-wrapper::-webkit-scrollbar { display: none; }
+
+    /* 로고 이미지 */
+    .top-left-logo {
+      width: 280px;
+      margin-bottom: 40px;
+      display: block;
+    }
+    .top-left-logo img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .preview-area {
+      grid-column: 2;
+      grid-row: 1;
+      background: #fff;
+      border: 1px solid #000;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 하단 스텝 & 버튼 영역 */
+    .bottom-bar {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: none;
+      background: transparent;
+      padding: 0;
+    }
+
+    .step-graphics {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "Noto Serif", serif;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      border: 1px solid #000;
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+      background: #ccc;
+      color: #000;
+      line-height: 1;
+    }
+
+    .step-num.active {
+      background: #E8007F;
+      color: #fff;
+    }
+
+    .btn-go-dance {
+      background: linear-gradient(180deg, #5F84FF 0%, #91D271 100%);
+      border: 1px solid #000;
+      font-family: "Noto Serif", serif;
+      font-size: 2rem;
+      padding: 10px 30px;
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: inset 0 2px 10px rgba(255,255,255,0.4);
+      transition: opacity 0.1s;
+    }
+    .btn-go-dance:hover {
+      opacity: 0.9;
+    }
+    
+    /* 우측 상단 홈 버튼 (사용자 요청) */
+    .home-link-topright {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      padding: 8px 16px;
+      border: 2px solid #000;
+      background: rgba(255,255,255,0.6);
+      color: #000;
+      font-family: "Noto Serif", serif;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    }
+    .home-link-topright:hover {
+      background: #000;
+      color: #39FF14;
     }
 
     @media (max-width: 700px) {
-      body { height: auto; overflow: auto; }
-      main { overflow: visible; }
-      .split { grid-template-columns: 1fr; min-height: auto; }
-      .split-left { max-height: 55vh; }
-      .preview-area { min-height: 340px; }
+      .create-layout {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+      }
+      .left-panel-wrapper {
+        max-height: 50vh;
+      }
+      .preview-area {
+        height: 60vh;
+      }
+      .step-graphics {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .bottom-bar {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 20px;
+      }
     }
   </style>
 </head>
 <body>
 
-<header class="site-header">
-  <a href="index.html" class="site-logo">AIR DANCER</a>
-  <nav class="site-nav">
-    <a href="create.html" class="active">CREATE</a>
-    <a href="dance.html">DANCE</a>
-    <a href="gallery.html">GALLERY</a>
-  </nav>
-</header>
+<main class="create-layout">
 
-<main>
-  <div class="split">
+  <!-- 왼쪽: 커스터마이즈 패널들 -->
+  <div style="grid-column: 1; grid-row: 1; display:flex; flex-direction:column; min-height:0;">
+    <a href="index.html" class="top-left-logo">
+      <img src="image/Logo.svg" alt="Wobby">
+    </a>
+    <div class="left-panel-wrapper">
 
-    <!-- ── 왼쪽: 커스터마이즈 패널들 ── -->
-    <div class="split-left">
-      <div class="info-bar">프리셋을 조합해 나만의 인형을 만드세요</div>
-
-      <!-- BODY COLOR (몸통 색깔) -->
+      <!-- BODY COLOR -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="bodycolor">
-          <span>BODY COLOR 몸통색</span><span class="plus">+</span>
+          <span>BODY COLOR</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-bodycolor">
           <div class="color-grid" id="bodyColorGrid"></div>
         </div>
       </div>
 
-      <!-- ARM COLOR (팔 색깔) — 1단계 신규 추가 -->
+      <!-- ARM COLOR -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="armcolor">
-          <span>ARM COLOR 팔색</span><span class="plus">+</span>
+          <span>ARM COLOR</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-armcolor">
           <div class="color-grid" id="armColorGrid"></div>
         </div>
       </div>
 
-      <!-- EYES (눈 디자인) — 이미지 썸네일로 선택 -->
+      <!-- EYES -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="eyes">
-          <span>EYES 눈</span><span class="plus">+</span>
+          <span>EYES</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-eyes">
           <div class="eye-grid" id="eyeGrid"></div>
         </div>
       </div>
 
-      <!-- DECORATION (몸통 장식) -->
+      <!-- DECORATION -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="deco">
-          <span>DECORATION 장식</span><span class="plus">+</span>
+          <span>DECORATION</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-deco">
           <div class="eye-grid" id="decoGrid"></div>
         </div>
       </div>
 
-      <!-- HAT (모자) -->
+      <!-- HAT -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="hat">
-          <span>HAT 모자</span><span class="plus">+</span>
+          <span>HAT</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-hat">
           <div class="eye-grid" id="hatGrid"></div>
         </div>
       </div>
 
-      <!-- MOUTH (입 디자인) -->
+      <!-- MOUTH -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="mouth">
-          <span>MOUTH 입</span><span class="plus">+</span>
+          <span>MOUTH</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-mouth">
           <div class="eye-grid" id="mouthGrid"></div>
         </div>
       </div>
 
-      <!-- BODY TEXT (몸통 글자) -->
+      <!-- BODY TEXT -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="text">
-          <span>BODY TEXT 글자</span><span class="plus">+</span>
+          <span>BODY TEXT</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-text">
           <span class="label">몸통 원통에 세로로 쓰여집니다 (최대 10자)</span>
@@ -226,10 +378,10 @@
         </div>
       </div>
 
-      <!-- BUILDING (빌딩 설정) -->
+      <!-- BUILDING -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="building">
-          <span>BUILDING 빌딩 설정</span><span class="plus">+</span>
+          <span>BUILDING</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-building">
           <span class="label">1. 빌딩 클릭 시 이동할 웹사이트 URL</span>
@@ -240,10 +392,10 @@
         </div>
       </div>
 
-      <!-- NAME (인형 이름) -->
+      <!-- NAME -->
       <div class="panel opt-section">
         <div class="panel-header open" data-panel="name">
-          <span>NAME 이름</span><span class="plus">+</span>
+          <span>NAME</span><span class="plus">+</span>
         </div>
         <div class="panel-body open" id="panel-name">
           <span class="label">내 광고풍선인형의 이름</span>
@@ -252,24 +404,37 @@
         </div>
       </div>
 
-    </div><!-- /split-left -->
+    </div><!-- /left-panel-wrapper -->
+  </div><!-- /left column container -->
 
-    <!-- ── 오른쪽: 3D 미리보기 ── -->
-    <div class="split-right" style="flex-direction:column;">
-      <div class="preview-area" style="flex:1; width:100%; position:relative;">
-        <span class="preview-label">LIVE PREVIEW</span>
-        <div id="previewCanvas" style="width:100%; height:100%;"></div>
-        <span class="preview-name" id="previewName">DANCER #001</span>
+  <!-- 오른쪽: 3D 미리보기 -->
+  <div class="preview-area">
+    <div id="previewCanvas" style="width:100%; height:100%;"></div>
+    <span class="preview-name" id="previewName" style="color:rgba(0,0,0,0.6);">DANCER #001</span>
+  </div>
+
+  <!-- 하단 바 -->
+  <div class="bottom-bar">
+    <div class="step-graphics">
+      <div class="step-item">
+        <div class="step-num active">1</div>
+        Create Dancer
       </div>
-
-      <div class="bottom-bar">
-        <button class="btn btn-green" id="btnSaveGallery">SAVE TO GALLERY →</button>
-        <a href="dance.html" class="btn" id="btnDance">GO DANCE ↗</a>
-        <button class="btn" id="btnRandom" title="랜덤 조합">RANDOM</button>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        Choose a Dance
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        Show to the Plaza
       </div>
     </div>
-
+    <!-- "좌측 끝으로" vs "우측 끝으로" - "Go Dance" 버튼. 우측이 자연스럽지만 좌측을 요청했다면?
+         일단 space-between이므로 step-graphics가 좌측, btn-go-dance가 우측에 배치됩니다. 
+         만약 step이 없으면 btn-go-dance가 좌측 끝으로 갑니다. -->
+    <button class="btn-go-dance" id="btnSaveDance">Go Dance</button>
   </div>
+
 </main>
 
 <script src="js/dancer.js"></script>
@@ -550,31 +715,9 @@ function sync() {
 
 // ── 액션 버튼들 ───────────────────────────────────────────────────────────────
 
-document.getElementById('btnSaveGallery').addEventListener('click', () => {
-  const saved = DancerStorage.addDancer({ ...config });
-  DancerStorage.clearCurrent();
-  alert(`"${saved.name}" 이(가) 갤러리에 저장되었습니다!`);
-  window.location.href = 'gallery.html';
-});
-
-document.getElementById('btnDance').addEventListener('click', () => {
+document.getElementById('btnSaveDance').addEventListener('click', () => {
   DancerStorage.setCurrent({ ...config });
   window.location.href = 'dance.html';
-});
-
-// RANDOM 버튼: 몸통 색 + 팔 색 + 눈 + 장식 + 모자를 모두 무작위로 바꿉니다.
-document.getElementById('btnRandom').addEventListener('click', () => {
-  config.colorIndex    = Math.floor(Math.random() * DANCER_COLORS.length);
-  config.armColorIndex = Math.floor(Math.random() * DANCER_COLORS.length);
-  config.eyeStyle      = Math.floor(Math.random() * EYE_IMAGES.length);
-  config.decoration    = Math.floor(Math.random() * (DECO_IMAGES.length + 1));  // 0=NONE
-  config.hatStyle      = Math.floor(Math.random() * (HAT_IMAGES.length  + 1));  // 0=NONE
-  config.mouthStyle    = Math.floor(Math.random() * (MOUTH_IMAGES.length + 1)); // 0=기본
-
-  Object.assign(dancer.config, config);
-  dancer.rebuild();
-  rebuildUI();
-  sync();
 });
 
 /**

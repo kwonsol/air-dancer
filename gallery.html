@@ -9,6 +9,78 @@
   <style>
     body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .dancer-popup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(280px, 30vw, 420px);
+      background: linear-gradient(180deg, #ffffff 0%, #d8dcff 100%);
+      border: 2px solid #39FF14;
+      padding: 28px 32px 32px;
+      z-index: 200;
+      display: none;
+      font-family: "Noto Serif", serif;
+      color: #E8007F;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .dancer-popup.open { display: block; }
+    
+    .popup-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #E8007F;
+    }
+
+    .dancer-popup .ap-title {
+      font-size: clamp(0.85rem, 1.2vw, 1rem);
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #E8007F;
+      line-height: 1.3;
+      border-bottom: 2px solid #E8007F;
+      padding-bottom: 5px;
+      text-transform: uppercase;
+    }
+    
+    .dancer-popup .ap-body {
+      font-size: clamp(0.8rem, 1.1vw, 0.95rem);
+      font-weight: 400;
+      line-height: 1.65;
+      color: #E8007F;
+      margin-bottom: 20px;
+    }
+    
+    .delete-btn {
+      background: #E8007F;
+      color: #fff;
+      border: 1px solid #000;
+      padding: 8px 16px;
+      font-family: "Noto Serif", serif;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      text-transform: uppercase;
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    }
+    .delete-btn:hover { background: #ff1a9c; }
+
+    /* Dim overlay */
+    .popup-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 190;
+      display: none;
+    }
+    .popup-overlay.open { display: block; }
+
+    @media (max-width: 700px) {
+      .plaza-area { border: none; }
+    }
 
     /* ── INFO BAR ── */
     .info-bar {
@@ -18,7 +90,8 @@
       align-items: center;
       gap: 16px;
       flex-wrap: wrap;
-      background: var(--white);
+      background: rgba(127, 146, 255, 0.25);
+      backdrop-filter: blur(4px);
     }
 
     .info-bar-title {
@@ -26,12 +99,14 @@
       font-weight: bold;
       letter-spacing: 0.18em;
       text-transform: uppercase;
+      font-family: "Noto Serif", serif;
     }
 
     .info-bar-count {
       font-size: 0.65rem;
       letter-spacing: 0.1em;
-      opacity: 0.5;
+      opacity: 0.6;
+      font-family: "Noto Serif", serif;
     }
 
     .info-bar-spacer { flex: 1; }
@@ -41,7 +116,7 @@
       flex: 1;
       position: relative;
       overflow: hidden;
-      background: #fafafa;
+      background: transparent;
       border-bottom: var(--border);
     }
 
@@ -53,15 +128,13 @@
     }
 
     #plazaCanvas:active { cursor: grabbing; }
-
-    /* click-to-place mode */
     #plazaCanvas.place-mode { cursor: crosshair; }
 
     /* ── SCROLLBAR ── */
     .plaza-scroll-track {
       height: 14px;
-      border-top: 2px solid var(--black);
-      background: #f0f0f0;
+      border-top: var(--border);
+      background: rgba(255,255,255,0.3);
       position: relative;
       cursor: pointer;
     }
@@ -71,7 +144,7 @@
       top: 2px;
       height: 10px;
       min-width: 40px;
-      background: var(--green);
+      background: linear-gradient(90deg, #5F84FF, #91D271);
       border: 1.5px solid var(--black);
       cursor: grab;
     }
@@ -81,7 +154,8 @@
       display: grid;
       grid-template-columns: 1fr 320px;
       border-top: var(--border);
-      background: var(--white);
+      background: rgba(255,255,255,0.35);
+      backdrop-filter: blur(6px);
       max-height: 180px;
     }
 
@@ -98,7 +172,8 @@
       font-size: 0.68rem;
       line-height: 1.6;
       letter-spacing: 0.06em;
-      opacity: 0.6;
+      opacity: 0.7;
+      font-family: "Noto Serif", serif;
     }
 
     .place-controls {
@@ -112,85 +187,30 @@
       font-size: 0.65rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      opacity: 0.55;
+      opacity: 0.6;
+      font-family: "Noto Serif", serif;
     }
 
     #placeXInput {
       width: 80px;
-      border: 2px solid var(--black);
+      border: var(--border);
       padding: 4px 8px;
       font-family: var(--font);
       font-size: 0.78rem;
       border-radius: 0;
       outline: none;
+      background: rgba(255,255,255,0.7);
     }
-
-    /* Selected dancer info panel */
-    .info-panel {
-      padding: 14px 18px;
-      overflow-y: auto;
-    }
-
-    .info-panel-empty {
-      font-size: 0.68rem;
-      letter-spacing: 0.08em;
-      opacity: 0.35;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-    }
-
-    .dancer-info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px 12px;
-    }
-
-    .di-key {
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      opacity: 0.45;
-      margin-top: 6px;
-    }
-
-    .di-val {
-      font-size: 0.75rem;
-      font-weight: bold;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .di-swatch {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 1.5px solid #000;
-      vertical-align: middle;
-      margin-right: 4px;
-    }
-
-    .delete-btn {
-      margin-top: 10px;
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-      color: #c00;
-      border-color: #c00;
-      padding: 4px 10px;
-    }
-
-    .delete-btn:hover { background: #c00; color: #fff; }
 
     /* no dancer notice */
     .no-dancer-notice {
       border: var(--border);
-      background: #fff8e0;
+      background: rgba(255,255,255,0.6);
       padding: 10px 14px;
       font-size: 0.7rem;
       letter-spacing: 0.06em;
       line-height: 1.6;
+      font-family: "Noto Serif", serif;
     }
 
     @media (max-width: 700px) {
@@ -204,69 +224,34 @@
 </head>
 <body>
 
-<header class="site-header">
-  <a href="index.html" class="site-logo">AIR DANCER</a>
-  <nav class="site-nav">
-    <a href="create.html">CREATE</a>
-    <a href="dance.html">DANCE</a>
-    <a href="gallery.html" class="active">GALLERY</a>
-  </nav>
+<header class="top-gradient-header">
+  <a href="index.html" class="top-logo">
+    <img src="image/Logo.svg" alt="Wobby">
+  </a>
 </header>
 
-<main>
-  <!-- Info bar -->
-  <div class="info-bar">
-    <span class="info-bar-title">UE — 광장 PLAZA</span>
-    <span class="info-bar-count" id="dancerCount">0 DANCERS</span>
-    <span class="info-bar-spacer"></span>
-    <span style="font-size:0.62rem; opacity:0.4; letter-spacing:0.08em;">드래그로 스크롤 · 인형 클릭으로 선택</span>
-  </div>
-
-  <!-- Plaza 3D area -->
+<main style="position: relative;">
+  <!-- PLAZA AREA -->
   <div class="plaza-area">
-    <div id="plazaContainer" style="width:100%; height:100%;"></div>
+    <div id="plazaCanvas"></div>
   </div>
 
-  <!-- Scroll track -->
-  <div class="plaza-scroll-track" id="scrollTrack">
-    <div id="scrollThumb"></div>
-  </div>
+  <!-- POPUP OVERLAY -->
+  <div class="popup-overlay" id="popupOverlay"></div>
 
-  <!-- Bottom controls -->
-  <div class="bottom-layout">
-
-    <!-- Left: place controls -->
-    <div class="bottom-actions">
-      <div id="noDancerNotice" class="no-dancer-notice" style="display:none;">
-        아직 내 인형이 없어요!<br>
-        <a href="create.html" style="font-weight:bold; color:inherit;">← CREATE</a>에서 인형을 만들고 저장해 주세요.
-      </div>
-
-      <div id="placeControls" style="display:none;">
-        <div class="place-hint">
-          광장에서 빈 곳을 클릭하거나 X 위치를 직접 입력해 내 인형을 배치하세요.
-        </div>
-        <div class="place-controls">
-          <button class="btn btn-green" id="btnPlaceMode">CLICK TO PLACE</button>
-          <span class="place-x-label">X =</span>
-          <input type="number" id="placeXInput" min="80" max="3000" step="10" value="1400" />
-          <button class="btn" id="btnPlaceAt">PLACE</button>
-        </div>
-      </div>
-
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <a href="create.html" class="btn btn-green" style="font-size:0.72rem;">+ CREATE NEW</a>
-        <button class="btn" id="btnAutoScroll" style="font-size:0.72rem;">AUTO SCROLL</button>
-      </div>
+  <!-- POPUP -->
+  <div class="dancer-popup" id="dancerPopup">
+    <div class="popup-close" id="popupClose">&times;</div>
+    <div class="ap-title" id="popupTitle">DANCER NAME</div>
+    <div class="ap-body" id="popupBody">
+      <!-- Info goes here -->
     </div>
-
-    <!-- Right: selected dancer info -->
-    <div class="info-panel" id="infoPanel">
-      <div class="info-panel-empty" id="infoEmpty">인형을 클릭하면 정보가 표시됩니다</div>
-      <div id="infoContent" style="display:none;"></div>
+    <div id="popupFooter">
+      <!-- Delete button goes here -->
     </div>
-
   </div>
+
+
 </main>
 
 <script src="js/dancer.js"></script>
@@ -277,25 +262,13 @@ let selectedId  = null;
 let placeModeOn = false;
 
 // ── 3D PLAZA SCENE ───────────────────────────────────────────────────────────
-const plazaContainer = document.getElementById('plazaContainer');
+const plazaContainer = document.getElementById('plazaCanvas');
 const plaza = new PlazaScene(plazaContainer);
 
 // ── LOAD DANCERS ──────────────────────────────────────────────────────────────
 function loadDancers() {
   const configs = DancerStorage.getAllDancers();
   plaza.loadDancers(configs);
-  document.getElementById('dancerCount').textContent = configs.length + ' DANCERS';
-
-  // Check if user has a dancer
-  const hasMine = DancerStorage.loadUserDancers().length > 0;
-  const hasCurrent = !!DancerStorage.getCurrent();
-  if (!hasMine && !hasCurrent) {
-    document.getElementById('noDancerNotice').style.display = 'block';
-    document.getElementById('placeControls').style.display  = 'none';
-  } else {
-    document.getElementById('noDancerNotice').style.display = 'none';
-    document.getElementById('placeControls').style.display  = 'block';
-  }
 }
 loadDancers();
 
@@ -311,156 +284,59 @@ plaza.onSelect = (entry) => {
 };
 
 plaza.onPlace = (worldX) => {
-  if (placeModeOn) {
-    const pixelX = Math.round(worldX * 55);
-    placeDancerAt(pixelX);
-    placeModeOn = false;
-    plaza.placeMode = false;
-    document.getElementById('btnPlaceMode').textContent = 'CLICK TO PLACE';
-  }
+  // place mode removed
 };
 
 // Start the 3D scene
 plaza.start();
 
-// ── SCROLLBAR (simplified — maps to plaza camera) ─────────────────────────────
-const scrollTrack = document.getElementById('scrollTrack');
-const scrollThumb = document.getElementById('scrollThumb');
+// 홈화면과 동일한 하늘색 배경 설정
+plaza.scene.background = new THREE.Color(0x9fc8ef);
 
-function updateScrollThumb() {
-  const lim = plaza._camLimits;
-  const range = lim.max - lim.min;
-  if (range <= 0) return;
-  const trackW = scrollTrack.clientWidth;
-  const thumbW = Math.max(40, trackW * 0.15);
-  const progress = (plaza._camCurrentX - lim.min) / range;
-  const thumbX = progress * (trackW - thumbW);
-  scrollThumb.style.width = thumbW + 'px';
-  scrollThumb.style.left  = Math.max(0, thumbX) + 'px';
-}
-setInterval(updateScrollThumb, 100);
-
-// Drag scrollbar
-let thumbDrag = false, thumbStartX = 0, thumbStartCam = 0;
-scrollThumb.addEventListener('mousedown', e => {
-  thumbDrag = true; thumbStartX = e.clientX;
-  thumbStartCam = plaza._camTargetX; e.preventDefault();
-});
-document.addEventListener('mousemove', e => {
-  if (!thumbDrag) return;
-  const lim = plaza._camLimits;
-  const range = lim.max - lim.min;
-  const trackW = scrollTrack.clientWidth;
-  const thumbW = Math.max(40, trackW * 0.15);
-  const delta = e.clientX - thumbStartX;
-  plaza._camTargetX = thumbStartCam + delta * range / (trackW - thumbW);
-});
-document.addEventListener('mouseup', () => { thumbDrag = false; });
-
-// Click on track
-scrollTrack.addEventListener('click', e => {
-  if (thumbDrag) return;
-  const rect = scrollTrack.getBoundingClientRect();
-  const clickX = e.clientX - rect.left;
-  const lim = plaza._camLimits;
-  const range = lim.max - lim.min;
-  plaza._camTargetX = lim.min + (clickX / scrollTrack.clientWidth) * range;
-});
-
-// ── INFO PANEL ────────────────────────────────────────────────────────────────
+// ── INFO POPUP ────────────────────────────────────────────────────────────────
 function showInfo(d) {
-  const empty   = document.getElementById('infoEmpty');
-  const content = document.getElementById('infoContent');
-
+  const popup = document.getElementById('dancerPopup');
+  const overlay = document.getElementById('popupOverlay');
+  
   if (!d) {
-    empty.style.display   = 'flex';
-    content.style.display = 'none';
+    popup.classList.remove('open');
+    overlay.classList.remove('open');
     return;
   }
-
-  empty.style.display   = 'none';
-  content.style.display = 'block';
 
   const cfg = d.config;
   const color = DANCER_COLORS[cfg.colorIndex] || DANCER_COLORS[0];
   const isUser = !cfg.isSample;
 
-  content.innerHTML = `
-    <div style="font-size:0.9rem; font-weight:900; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px; border-bottom:2px solid #000; padding-bottom:6px;">
-      ${cfg.name || d.id}
-    </div>
-    <div class="dancer-info-grid">
-      <div>
-        <div class="di-key">COLOR</div>
-        <div class="di-val">
-          <span class="di-swatch" style="background:${color.bodyHex}"></span>${color.name}
-        </div>
-      </div>
-      <div>
-        <div class="di-key">EYES</div>
-        <div class="di-val">STYLE ${cfg.faceStyle + 1}</div>
-      </div>
-      <div>
-        <div class="di-key">MOUTH</div>
-        <div class="di-val">STYLE ${cfg.mouthStyle !== undefined ? cfg.mouthStyle + 1 : 1}</div>
-      </div>
-      <div>
-        <div class="di-key">DECO</div>
-        <div class="di-val">${cfg.decoration > 0 ? `STYLE ${cfg.decoration}` : 'NONE'}</div>
-      </div>
-      <div>
-        <div class="di-key">HAT</div>
-        <div class="di-val">${cfg.hatStyle > 0 ? `STYLE ${cfg.hatStyle}` : 'NONE'}</div>
-      </div>
-      <div>
-        <div class="di-key">TEXT</div>
-        <div class="di-val">${cfg.bodyText || '—'}</div>
-      </div>
-      <div>
-        <div class="di-key">TYPE</div>
-        <div class="di-val">${isUser ? '★ MY DANCER' : 'SAMPLE'}</div>
-      </div>
-    </div>
-    <button class="btn delete-btn" onclick="deleteDancer('${d.id}', ${cfg.isSample})">DELETE</button>
+  document.getElementById('popupTitle').textContent = cfg.name || d.id;
+  
+  document.getElementById('popupBody').innerHTML = `
+    <div><strong>COLOR:</strong> ${color.name}</div>
+    <div><strong>EYES:</strong> STYLE ${(cfg.eyeStyle !== undefined ? cfg.eyeStyle : 0) + 1}</div>
+    <div><strong>DECO:</strong> ${cfg.decoration > 0 ? `STYLE ${cfg.decoration}` : 'NONE'}</div>
+    <div><strong>HAT:</strong> ${cfg.hatStyle > 0 ? `STYLE ${cfg.hatStyle}` : 'NONE'}</div>
+    <div><strong>TEXT:</strong> ${cfg.bodyText || '—'}</div>
+    <div><strong>TYPE:</strong> ${isUser ? '★ MY DANCER' : 'SAMPLE'}</div>
   `;
+
+  document.getElementById('popupFooter').innerHTML = `
+    <button class="btn delete-btn" onclick="deleteDancer('${d.id}', ${cfg.isSample})">DELETE DANCER</button>
+  `;
+
+  popup.classList.add('open');
+  overlay.classList.add('open');
 }
 
-// ── PLACE DANCER ──────────────────────────────────────────────────────────────
-function placeDancerAt(x) {
-  const users = DancerStorage.loadUserDancers();
-  if (users.length === 0) {
-    alert('먼저 CREATE에서 인형을 만들고 저장해 주세요.');
-    return;
-  }
-  const last = users[users.length - 1];
-  DancerStorage.updatePosition(last.id, x);
-  plaza.updateDancerPosition(last.id, x);
-  document.getElementById('placeXInput').value = x;
-}
-
-document.getElementById('btnPlaceMode').addEventListener('click', () => {
-  const users = DancerStorage.loadUserDancers();
-  if (users.length === 0) {
-    alert('먼저 CREATE에서 인형을 만들고 저장해 주세요.');
-    return;
-  }
-  placeModeOn = !placeModeOn;
-  plaza.placeMode = placeModeOn;
-  document.getElementById('btnPlaceMode').textContent = placeModeOn ? 'CANCEL (ESC)' : 'CLICK TO PLACE';
+document.getElementById('popupClose').addEventListener('click', () => {
+  showInfo(null);
+});
+document.getElementById('popupOverlay').addEventListener('click', () => {
+  showInfo(null);
 });
 
-document.getElementById('btnPlaceAt').addEventListener('click', () => {
-  const x = parseInt(document.getElementById('placeXInput').value, 10);
-  if (!isNaN(x)) placeDancerAt(Math.max(80, Math.min(3100, x)));
-});
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && placeModeOn) {
-    placeModeOn = false;
-    plaza.placeMode = false;
-    document.getElementById('btnPlaceMode').textContent = 'CLICK TO PLACE';
-  }
-});
+
+// ── PLACE DANCER (UI REMOVED) ───────────────────────────────────────────────────
 
 // ── DELETE DANCER ─────────────────────────────────────────────────────────────
 function deleteDancer(id, isSample) {
