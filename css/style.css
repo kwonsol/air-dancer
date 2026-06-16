@@ -26,6 +26,7 @@ html, body {
   color: var(--black);
   min-height: 100vh;
   overflow-x: hidden;
+  cursor: url('../Image/cussor-32.png'), auto;
 }
 
 /* ── HEADER ───────────────────────────────────────── */
