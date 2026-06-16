@@ -54,19 +54,60 @@
       margin-bottom: 20px;
     }
     
-    .delete-btn {
-      background: #E8007F;
-      color: #fff;
+    .popup-btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    .delete-btn, .download-btn {
+      flex: 1;
       border: 1px solid #000;
-      padding: 8px 16px;
+      padding: 8px 10px;
       font-family: "Noto Serif", serif;
       font-weight: bold;
       cursor: pointer;
-      width: 100%;
       text-transform: uppercase;
       box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+      font-size: 0.78rem;
+    }
+    .delete-btn {
+      background: #E8007F;
+      color: #fff;
     }
     .delete-btn:hover { background: #ff1a9c; }
+    .download-btn {
+      background: #39FF14;
+      color: #000;
+      position: relative;
+    }
+    .download-btn:hover { background: #55ff33; }
+
+    .download-menu {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1.5px solid #39FF14;
+      box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    .download-menu.open { display: block; }
+    .download-menu button {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      background: none;
+      border: none;
+      font-family: "Noto Serif", serif;
+      font-weight: bold;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-align: left;
+      color: #000;
+    }
+    .download-menu button:hover { background: #e8ffe8; }
+    .download-menu button + button { border-top: 1px solid #ccc; }
 
     /* Dim overlay */
     .popup-overlay {
@@ -320,7 +361,16 @@ function showInfo(d) {
   `;
 
   document.getElementById('popupFooter').innerHTML = `
-    <button class="btn delete-btn" onclick="deleteDancer('${d.id}', ${cfg.isSample})">DELETE DANCER</button>
+    <div class="popup-btn-row">
+      <button class="btn delete-btn" onclick="deleteDancer('${d.id}', ${cfg.isSample})">DELETE</button>
+      <div style="position:relative; flex:1;">
+        <button class="download-btn" style="width:100%" onclick="toggleDownloadMenu(event)">DOWNLOAD ▲</button>
+        <div class="download-menu" id="downloadMenu">
+          <button onclick="downloadDancer('image')">IMAGE (PNG)</button>
+          <button onclick="downloadDancer('video')">VIDEO (WEBM)</button>
+        </div>
+      </div>
+    </div>
   `;
 
   popup.classList.add('open');
@@ -353,6 +403,72 @@ function deleteDancer(id, isSample) {
   selectedId = null;
   showInfo(null);
   loadDancers();
+}
+
+// ── DOWNLOAD ──────────────────────────────────────────────────────────────────
+function toggleDownloadMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('downloadMenu');
+  menu.classList.toggle('open');
+}
+
+document.addEventListener('click', () => {
+  const menu = document.getElementById('downloadMenu');
+  if (menu) menu.classList.remove('open');
+});
+
+function downloadDancer(type) {
+  const menu = document.getElementById('downloadMenu');
+  if (menu) menu.classList.remove('open');
+
+  // 현재 선택된 댄서 config 가져오기
+  const entry = plaza._entries.find(e => e.id === selectedId);
+  if (!entry) return;
+  const cfg = entry.config;
+  const name = (cfg.name || selectedId).replace(/\s+/g, '_');
+
+  // 오프스크린 컨테이너에 DancerScene 생성
+  const offDiv = document.createElement('div');
+  offDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:400px;height:500px;';
+  document.body.appendChild(offDiv);
+
+  const scene = new DancerScene(offDiv);
+  scene.setDancer(AirDancer.fromConfig(cfg));
+  scene.start();
+
+  if (type === 'image') {
+    // 몇 프레임 후 캡처 (애니메이션 시작 대기)
+    setTimeout(() => {
+      scene.renderer.render(scene.scene, scene.camera);
+      const url = scene.renderer.domElement.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}.png`;
+      a.click();
+      scene.dispose();
+      document.body.removeChild(offDiv);
+    }, 300);
+
+  } else {
+    // VIDEO: MediaRecorder로 3초 녹화
+    const stream = scene.renderer.domElement.captureStream(30);
+    const chunks = [];
+    const rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+    rec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    rec.onstop = () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      scene.dispose();
+      document.body.removeChild(offDiv);
+    };
+    rec.start();
+    setTimeout(() => rec.stop(), 3000);
+  }
 }
 
 // ── AUTO SCROLL ───────────────────────────────────────────────────────────────
